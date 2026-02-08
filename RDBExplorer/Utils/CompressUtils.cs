@@ -48,7 +48,7 @@ namespace RDBExplorer.Utils
                     // 78 9C
                     if (uncompressedSize > 0 && uncompressedSize <= 0x10000 && magic == 0x9C78)
                     {
-                        Console.WriteLine($"Block size {uncompressedSize}");
+                        //Console.WriteLine($"Block size {uncompressedSize}");
                         chunksOffsets.Add(currentPos);
                         msInput.Position = currentPos + 16;
                     }
