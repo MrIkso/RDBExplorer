@@ -97,7 +97,7 @@ namespace RDBExplorer.Core.LayeredFile
                     // detect ext by header
                     string entryName = $"{Path.GetFileNameWithoutExtension(filePath)}_entry_{i}{FileTypeDetector.DetectExtension(finalData)}";
                     string nameFromArchive = lFMOrderReader.HashedPathNames[i];
-                    Console.WriteLine($"{entryName} -> {nameFromArchive}");
+                    Console.WriteLine($"Unpacking: {nameFromArchive} -> {entryName}");
 
                     manifest.Files.Add(new ArchiveBinFile
                     {
