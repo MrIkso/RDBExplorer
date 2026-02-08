@@ -382,8 +382,8 @@ namespace RDBExplorer.Forms
         {
             using (OpenFileDialog ofd = new OpenFileDialog())
             {
-                ofd.Title = "Select bin archive";
-                ofd.Filter = "Archive file |*.bin";
+                ofd.Title = "Select archive file";
+                ofd.Filter = "Supported files (*.bin, *.lnk)|*.bin;*.lnk";
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
                     string binArchivePath = ofd.FileName;
@@ -392,9 +392,9 @@ namespace RDBExplorer.Forms
                         return;
 
                     string archiveName = Path.GetFileNameWithoutExtension(binArchivePath);
-                    if (!archiveName.StartsWith("archive"))
+                    if (!archiveName.ToLower().StartsWith("archive"))
                     {
-                        MessageBox.Show("Select correct bin archive with name like archive_00.bin", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("Select correct bin archive with name like archive_00.bin (*.lnk)", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return;
                     }
 
