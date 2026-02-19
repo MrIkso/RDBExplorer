@@ -3,7 +3,7 @@
 A utility for browsing, extracting, and modifying **.fdata**/**archive_xx.bin** files from **Nioh 3**
 
 ## Disclaimer
-This project is intended for educational and research purposes only. The authors are not responsible for any damage caused to your game files. Always back up your archives before modifying them.
+This project is intended for educational and research purposes only. The authors are not responsible for any damage caused to your game files. Always back up your archives before modifying them. Required .NET 8 for running
 
 ## Features
 
