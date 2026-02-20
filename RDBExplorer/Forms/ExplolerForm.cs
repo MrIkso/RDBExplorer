@@ -205,7 +205,7 @@ namespace RDBExplorer.Forms
 
             await Task.Run(() =>
             {
-                
+
                 byte[] data = File.ReadAllBytes(ofd.FileName);
                 var result = _archiveExploler.InjectData(entry, data, _currentlyOpenedFile);
                 if (!result.IsSuccessed)
@@ -257,7 +257,7 @@ namespace RDBExplorer.Forms
             archiveList.Enabled = false;
             progressBarOperation.Value = 0;
             progressBarOperation.Maximum = total;
-            
+
             var progress = new Progress<int>(count =>
             {
                 progressBarOperation.Value = count;
@@ -556,6 +556,28 @@ namespace RDBExplorer.Forms
         private void ExplolerForm_Load(object sender, EventArgs e)
         {
             SetTitle();
+        }
+
+        private void g1TTexureToolToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            new G1ToolForm().Show();
+        }
+
+        private void archiveList_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            var item = archiveList.SelectedItems.Cast<ListViewItem>().First();
+            RDBEntry dBEntry = item.Tag as RDBEntry;
+            if (dBEntry != null)
+            {
+                if (dBEntry.TypeInfoKtid == 0xAD57EBBA || dBEntry.TypeInfoKtid == 0xAFBEC60C) {
+                    byte[]? entryData = _archiveExploler.GetEntryData(dBEntry);
+                    if (entryData != null)
+                    {
+                        G1ToolForm g1ToolForm = new G1ToolForm(dBEntry.Name, entryData);
+                        g1ToolForm.Show();
+                    }
+                }
+            }
         }
     }
 }

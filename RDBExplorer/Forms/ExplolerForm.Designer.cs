@@ -38,6 +38,7 @@
             grabAllMagicHeadersToolStripMenuItem = new ToolStripMenuItem();
             upackBinArchiveToolStripMenuItem = new ToolStripMenuItem();
             packBinArchiveToolStripMenuItem = new ToolStripMenuItem();
+            g1TTexureToolToolStripMenuItem = new ToolStripMenuItem();
             localeToolStripMenuItem = new ToolStripMenuItem();
             unpackLocalesToolStripMenuItem = new ToolStripMenuItem();
             packLocalesToolStripMenuItem = new ToolStripMenuItem();
@@ -84,7 +85,7 @@
             // 
             // toolsToolStripMenuItem
             // 
-            toolsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { extractAllToolStripMenuItem, grabNamesToolStripMenuItem, grabAllMagicHeadersToolStripMenuItem, upackBinArchiveToolStripMenuItem, packBinArchiveToolStripMenuItem });
+            toolsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { extractAllToolStripMenuItem, grabNamesToolStripMenuItem, grabAllMagicHeadersToolStripMenuItem, upackBinArchiveToolStripMenuItem, packBinArchiveToolStripMenuItem, g1TTexureToolToolStripMenuItem });
             toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             toolsToolStripMenuItem.Size = new Size(58, 24);
             toolsToolStripMenuItem.Text = "Tools";
@@ -123,6 +124,13 @@
             packBinArchiveToolStripMenuItem.Size = new Size(250, 26);
             packBinArchiveToolStripMenuItem.Text = "Pack Bin Archive";
             packBinArchiveToolStripMenuItem.Click += packBinArchiveToolStripMenuItem_Click;
+            // 
+            // g1TTexureToolToolStripMenuItem
+            // 
+            g1TTexureToolToolStripMenuItem.Name = "g1TTexureToolToolStripMenuItem";
+            g1TTexureToolToolStripMenuItem.Size = new Size(250, 26);
+            g1TTexureToolToolStripMenuItem.Text = "G1T Texure Tool";
+            g1TTexureToolToolStripMenuItem.Click += g1TTexureToolToolStripMenuItem_Click;
             // 
             // localeToolStripMenuItem
             // 
@@ -173,6 +181,7 @@
             archiveList.Size = new Size(794, 360);
             archiveList.TabIndex = 0;
             archiveList.UseCompatibleStateImageBehavior = false;
+            archiveList.MouseDoubleClick += archiveList_MouseDoubleClick;
             // 
             // toolStrip1
             // 
@@ -252,5 +261,6 @@
         private ToolStripMenuItem grabAllMagicHeadersToolStripMenuItem;
         private Label toolStripStatusLabel;
         private ProgressBar progressBarOperation;
+        private ToolStripMenuItem g1TTexureToolToolStripMenuItem;
     }
 }
