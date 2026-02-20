@@ -7,6 +7,7 @@ namespace RDBExplorer.Forms
     {
         private G1T _currentG1T;
         private G1TTexture _selectedTexture;
+        private string _currentFileName;
 
         public G1ToolForm()
         {
@@ -16,6 +17,7 @@ namespace RDBExplorer.Forms
 
         public G1ToolForm(string fileName, byte[] data) : this()
         {
+            _currentFileName = fileName;
             this.Text = $"G1Tool - {fileName}";
             _ = LoadWithDataAsync(data);
         }
@@ -88,7 +90,7 @@ namespace RDBExplorer.Forms
 
             using (var sfd = new SaveFileDialog())
             {
-                sfd.Filter = "PNG Image|*.png|JPEG Image|*.jpg|TGA Image|*.tga|HDR Image|*.hdr|EXR Image|*.exr";
+                sfd.Filter = "PNG Image|*.png|JPEG Image|*.jpg|TGA Image|*.tga|DDS Image|.*dds|HDR Image|*.hdr|EXR Image|*.exr";
                 sfd.FileName = string.IsNullOrEmpty(_selectedTexture.Name) ? "ExportedTexture" : _selectedTexture.Name;
 
                 if (sfd.ShowDialog() == DialogResult.OK)
@@ -143,8 +145,9 @@ namespace RDBExplorer.Forms
                 openFileDialog.Filter = "KT Textures|*.g1t";
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    this.Text = $"G1Tool - {Path.GetFileName(openFileDialog.FileName)}";
-                    byte[] data = await File.ReadAllBytesAsync(openFileDialog.FileName);
+                    _currentFileName = openFileDialog.FileName;
+                    this.Text = $"G1Tool - {Path.GetFileName(_currentFileName)}";
+                    byte[] data = await File.ReadAllBytesAsync(_currentFileName);
                     await LoadWithDataAsync(data);
                 }
             }
@@ -209,7 +212,7 @@ namespace RDBExplorer.Forms
                 byte[]? data = TextureConverter.DecodeG1t(_selectedTexture, mipIdx, layerIdx);
                 if (data == null)
                     return null;
-                return TextureConverter.CreateBitmapFromRawData(data, (int)_selectedTexture.MipMaps[mipIdx].Height, (int)_selectedTexture.MipMaps[mipIdx].Width);
+                return TextureConverter.CreateBitmapFromRawData(data, (int)_selectedTexture.MipMaps[mipIdx].Width, (int)_selectedTexture.MipMaps[mipIdx].Height);
             });
 
             if (bmp == null)
@@ -217,10 +220,8 @@ namespace RDBExplorer.Forms
                 MessageBox.Show($"Unable to preview texture", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            var oldImg = textutePrewierPictureBox.Image;
-            textutePrewierPictureBox.Image = bmp;
-            oldImg?.Dispose();
-
+            textutePrewierPictureBox.Bitmap?.Dispose();
+            textutePrewierPictureBox.Bitmap = bmp;
             toolStripStatusLabel.Text = "Ready";
         }
 
@@ -232,48 +233,81 @@ namespace RDBExplorer.Forms
             return _selectedTexture.ArraySize > 1 ? $"Layer {arrayIdx} - {faces[faceIdx]}" : faces[faceIdx];
         }
 
+        private void Form_Resize(object sender, EventArgs e)
+        {
+            textutePrewierPictureBox.Refresh();
+        }
+
         private async void exportImagesToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (_currentG1T == null || _currentG1T.G1TFile.Textures.Count == 0)
+            {
                 return;
+            }
 
             using (var fbd = new FolderBrowserDialog())
             {
+
                 if (fbd.ShowDialog() == DialogResult.OK)
                 {
-                    string folder = fbd.SelectedPath;
+                    string baseFolder = fbd.SelectedPath;
+                    string exportRoot = Path.Combine(baseFolder, $"{Path.GetFileNameWithoutExtension(_currentFileName)}_Exported");
+
+                    if (!Directory.Exists(exportRoot))
+                    {
+                        Directory.CreateDirectory(exportRoot);
+                    }
+
                     SetUIState(false);
 
-                    int total = _currentG1T.G1TFile.Textures.Count;
-                    toolStripStatusLabel.Text = $"Exporting 0/{total}...";
+                    int texTotal = _currentG1T.G1TFile.Textures.Count;
 
                     await Task.Run(() =>
                     {
-                        for (int i = 0; i < total; i++)
+                        for (int i = 0; i < texTotal; i++)
                         {
                             var tex = _currentG1T.G1TFile.Textures[i];
-                            string name = string.IsNullOrEmpty(tex.Name) ? $"Texture_{i}" : tex.Name;
-                            string outPath = Path.Combine(folder, name + ".png");
-
-                            try
-                            {
-                                TextureConverter.SaveImage(tex, 0, 0, outPath);
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine($"Failed to export {name}: {ex.Message}");
-                            }
-
-                            int current = i + 1;
+                            string texName = string.IsNullOrEmpty(tex.Name) ? $"Texture_{i:D3}" : tex.Name;
+                            string ext = ".dds";
                             this.Invoke(new Action(() => {
-                                toolStripStatusLabel.Text = $"Exporting {current}/{total}...";
+                                toolStripStatusLabel.Text = $"Exporting {texName} ({i + 1}/{texTotal})...";
                             }));
+
+                            string targetDir = exportRoot;
+                            if (tex.MipMaps.Count > 1 || tex.GetTotalLayers() > 1)
+                            {
+                                targetDir = Path.Combine(exportRoot, texName);
+                                Directory.CreateDirectory(targetDir);
+                            }
+
+                            for (int m = 0; m < tex.MipMaps.Count; m++)
+                            {
+                                uint layerCount = (uint)tex.MipMaps[m].Layers.Count;
+                                for (int l = 0; l < layerCount; l++)
+                                {
+                                    string fileName = $"{texName}_M{m:D2}_L{l:D2}{ext}";
+
+                                    if (tex.LoadType == G1TLoadType.CUBE || tex.LoadType == G1TLoadType.CUBE_ARRAY)
+                                    {
+                                        fileName = $"{texName}_M{m:D2}_L{l:D2}_{GetCubeFaceName(l)}{ext}";
+                                    }
+                                    string outPath = Path.Combine(targetDir, fileName);
+                                    try
+                                    {
+                                        TextureConverter.SaveImage(tex, m, l, outPath);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Console.WriteLine($"Error exporting {fileName}: {ex.Message}");
+                                    }
+                                }
+                            }
                         }
                     });
 
                     SetUIState(true);
-                    toolStripStatusLabel.Text = "Export finished.";
-                    MessageBox.Show("All textures exported successfully!", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    toolStripStatusLabel.Text = "Ready";
+                    MessageBox.Show($"Export complete!\nLocation: {exportRoot}", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
         }

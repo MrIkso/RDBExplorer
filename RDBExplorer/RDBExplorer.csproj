@@ -15,4 +15,8 @@
     <PackageReference Include="StbImageWriteSharp" Version="1.16.7" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\PictureBox\ImageViewControls.csproj" />
+  </ItemGroup>
+
 </Project>

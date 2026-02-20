@@ -201,14 +201,31 @@ namespace RDBExplorer.Utils
 
             switch (ext)
             {
-                case ".png": db.SaveAsPng(path); break;
+                case ".png": 
+                    db.SaveAsPng(path);
+                    break;
                 case ".jpg":
-                case ".jpeg": db.SaveAsJpg(path); break;
-                case ".bmp": db.SaveAsBmp(path); break;
-                case ".tga": db.SaveAsTga(path); break;
-                case ".hdr": db.SaveAsHdr(path); break;
-                case ".exr": db.SaveAsExr(path); break;
-                default: db.SaveAsPng(path + ".png"); break;
+                case ".jpeg":
+                    db.SaveAsJpg(path);
+                    break;
+                case ".bmp":
+                    db.SaveAsBmp(path);
+                    break;
+                case ".tga": 
+                    db.SaveAsTga(path);
+                    break;
+                case ".hdr":
+                    db.SaveAsHdr(path);
+                    break;
+                case ".exr":
+                    db.SaveAsExr(path);
+                    break;
+                case ".dds":
+                    db.SaveAsDds(path);
+                    break;
+                default: 
+                    db.SaveAsPng(path + ".png");
+                    break;
             }
         }
 
@@ -301,8 +318,8 @@ namespace RDBExplorer.Utils
                         break;
 
                     case G1TFormat.R16G16B16A16_HALF_FLOAT:
-                    case G1TFormat.RGBA16_FLOAT_0C:
-                        RgbConverter.Convert<ColorRGBA<float>, float, ColorRGBA<byte>, byte>(dataToDecode, width, height, decodedData);
+                    case G1TFormat.R16G16B16A16_HALF_FLOAT_0C:
+                        RgbConverter.Convert<ColorRGBA<Half>, Half, ColorRGBA<byte>, byte>(dataToDecode, width, height, decodedData);
                         break;
 
                     default:

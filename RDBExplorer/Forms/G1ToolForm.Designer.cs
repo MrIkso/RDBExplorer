@@ -1,4 +1,6 @@
-﻿namespace RDBExplorer.Forms
+﻿using ImageView;
+
+namespace RDBExplorer.Forms
 {
     partial class G1ToolForm
     {
@@ -45,7 +47,7 @@
             tableLayoutPanel2 = new TableLayoutPanel();
             layersComboBox = new ComboBox();
             label2 = new Label();
-            textutePrewierPictureBox = new PictureBox();
+            textutePrewierPictureBox = new ImageView.PictureBox();
             label1 = new Label();
             mipsComboBox = new ComboBox();
             textureDetailsTabPage = new TabPage();
@@ -60,7 +62,6 @@
             texturePreviewTabControl.SuspendLayout();
             textureTabPage.SuspendLayout();
             tableLayoutPanel2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)textutePrewierPictureBox).BeginInit();
             textureDetailsTabPage.SuspendLayout();
             SuspendLayout();
             // 
@@ -92,7 +93,7 @@
             // exportImagesToolStripMenuItem
             // 
             exportImagesToolStripMenuItem.Name = "exportImagesToolStripMenuItem";
-            exportImagesToolStripMenuItem.Size = new Size(224, 26);
+            exportImagesToolStripMenuItem.Size = new Size(187, 26);
             exportImagesToolStripMenuItem.Text = "Export Images";
             exportImagesToolStripMenuItem.Click += exportImagesToolStripMenuItem_Click;
             // 
@@ -154,6 +155,7 @@
             // 
             textureListView.Columns.AddRange(new ColumnHeader[] { textureName, textureSize });
             textureListView.Dock = DockStyle.Fill;
+            textureListView.FullRowSelect = true;
             textureListView.GridLines = true;
             textureListView.Location = new Point(0, 0);
             textureListView.Name = "textureListView";
@@ -166,12 +168,12 @@
             // textureName
             // 
             textureName.Text = "Name";
-            textureName.Width = 150;
+            textureName.Width = 140;
             // 
             // textureSize
             // 
             textureSize.Text = "Size";
-            textureSize.Width = 90;
+            textureSize.Width = 140;
             // 
             // texturePreviewTabControl
             // 
@@ -241,14 +243,29 @@
             // textutePrewierPictureBox
             // 
             textutePrewierPictureBox.BackColor = Color.Gray;
+            textutePrewierPictureBox.Bitmap = null;
             tableLayoutPanel2.SetColumnSpan(textutePrewierPictureBox, 6);
             textutePrewierPictureBox.Dock = DockStyle.Fill;
+            textutePrewierPictureBox.DragCursor = null;
+            textutePrewierPictureBox.DragMouseButton = MouseButtons.None;
+            textutePrewierPictureBox.EnableClickToZoom = false;
+            textutePrewierPictureBox.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.Default;
             textutePrewierPictureBox.Location = new Point(3, 3);
             textutePrewierPictureBox.Name = "textutePrewierPictureBox";
             textutePrewierPictureBox.Size = new Size(804, 502);
-            textutePrewierPictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
+            textutePrewierPictureBox.SizeMode = SizeMode.BestFit;
             textutePrewierPictureBox.TabIndex = 0;
             textutePrewierPictureBox.TabStop = false;
+            textutePrewierPictureBox.TransparentBackground = null;
+            textutePrewierPictureBox.UseBackgroundBrush = false;
+            textutePrewierPictureBox.UseZoomCursors = true;
+            textutePrewierPictureBox.VerticallScrollStep = 1F;
+            textutePrewierPictureBox.WheelScrollLock = false;
+            textutePrewierPictureBox.Zoom = 1F;
+            textutePrewierPictureBox.ZoomInCursor = null;
+            textutePrewierPictureBox.ZoomMouseButton = MouseButtons.Left;
+            textutePrewierPictureBox.ZoomOutCursor = null;
+            textutePrewierPictureBox.ZoomOutModifier = Keys.Control | Keys.Menu;
             // 
             // label1
             // 
@@ -301,6 +318,7 @@
             Margin = new Padding(4, 5, 4, 5);
             Name = "G1ToolForm";
             Text = "G1Tool";
+            Resize += Form_Resize;
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
             tableLayoutPanel1.ResumeLayout(false);
@@ -315,7 +333,6 @@
             textureTabPage.ResumeLayout(false);
             tableLayoutPanel2.ResumeLayout(false);
             tableLayoutPanel2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)textutePrewierPictureBox).EndInit();
             textureDetailsTabPage.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
@@ -338,7 +355,7 @@
         private TabPage textureTabPage;
         private TabPage textureDetailsTabPage;
         private TableLayoutPanel tableLayoutPanel2;
-        private PictureBox textutePrewierPictureBox;
+        private ImageView.PictureBox textutePrewierPictureBox;
         private ColumnHeader textureName;
         private ColumnHeader textureSize;
         private ComboBox layersComboBox;

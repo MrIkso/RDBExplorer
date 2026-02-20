@@ -2,6 +2,7 @@
 using AssetRipper.TextureDecoder.Rgb;
 using AssetRipper.TextureDecoder.Rgb.Channels;
 using AssetRipper.TextureDecoder.Rgb.Formats;
+using BCnEncoder.Shared.ImageFiles;
 using StbImageWriteSharp;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -65,9 +66,10 @@ namespace RDBExplorer.Utils
 
         public void SaveAsDds (string path)
         {
-            using Stream stream = File.OpenWrite(path);
-            ExrWriter.Write<TColor, TColorArg>(stream, Width, Height, Pixels);
+            DdsFile dds = DDSUtils.ConvertToDDS(Width, Height, DxgiFormat.DxgiFormatB8G8R8A8Unorm, Data);
+            DDSUtils.SaveDds(dds, path);
         }
+
         public void SaveAsHdr(string path)
         {
             GetDataAndComponentsForSaving(out byte[] data, out ColorComponents components);

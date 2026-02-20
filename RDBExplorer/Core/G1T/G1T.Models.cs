@@ -52,7 +52,7 @@ namespace RDBExplorer.Core.G1T
         R8G8B8A8_09 = 0x09,
         B8G8R8A8_0A = 0x0A,
         R32_FLOAT_0B = 0x0B,
-        RGBA16_FLOAT_0C = 0x0C,
+        R16G16B16A16_HALF_FLOAT_0C = 0x0C,
         RGBA32_FLOAT_0D = 0x0D,
         A2B10G10R10_HALF_FLOAT = 0x0E,
         A8_UNORM_0F = 0x0F,

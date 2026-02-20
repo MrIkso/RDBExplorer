@@ -62,7 +62,7 @@
                     return 1;
 
                 case G1TFormat.R16G16B16A16_HALF_FLOAT:
-                case G1TFormat.RGBA16_FLOAT_0C:
+                case G1TFormat.R16G16B16A16_HALF_FLOAT_0C:
                     return 8;
 
                 case G1TFormat.R32G32B32A32_FLOAT:
