@@ -1,9 +1,12 @@
 # RDB Explorer
+![License](https://img.shields.io/badge/License-MIT-blue.svg)
+![Language](https://img.shields.io/badge/Language-C%23-purple.svg)
+![Platform](https://img.shields.io/badge/Platform-Windows-teal.svg)
 
 A utility for browsing, extracting, and modifying **.fdata**/**archive_xx.bin** files from **Nioh 3**
 
 ## Disclaimer
-This project is intended for educational and research purposes only. The authors are not responsible for any damage caused to your game files. Always back up your archives before modifying them. Required .NET 8 for running
+This project is intended for educational and research purposes only. The authors are not responsible for any damage caused to your game files. Always back up your archives before modifying them. Required .NET 10 for running
 
 ## Features
 
@@ -48,4 +51,13 @@ The localization process follows a specific multi-step workflow:
 
 ## Technical Details
 - **Sortable Columns:** Click on **Name**, **Type**, **Size**, or **Container** headers to sort the view.
-- **Requirements:** Built with **.NET 8.0**, requires Windows 10/11.
+- **Requirements:** Built with **.NET 10.0**, requires Windows 10/11.
+
+
+## Acknowledgments
+Special thanks to the developers of any third-party libraries and information used in this project:
+- [ImageView.PictureBox](https://github.com/tonyp7/ImageView)
+- [BCnEncoder.Net](https://github.com/Nominom/BCnEncoder.NET)
+- [AssetRipper.TextureDecoder](https://github.com/AssetRipper/TextureDecoder)
+- [G1T](https://github.com/hearhellacopters/G1T) - @hearhellacopters for amazing g1t file researh
+- etc.
