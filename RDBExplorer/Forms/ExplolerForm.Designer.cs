@@ -228,6 +228,7 @@
             Controls.Add(menuStrip1);
             MainMenuStrip = menuStrip1;
             Name = "ExplolerForm";
+            StartPosition = FormStartPosition.CenterScreen;
             Text = "ExplolerForm";
             Load += ExplolerForm_Load;
             menuStrip1.ResumeLayout(false);

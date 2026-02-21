@@ -34,6 +34,9 @@ namespace RDBExplorer.Forms
             fileToolStripMenuItem = new ToolStripMenuItem();
             openToolStripMenuItem = new ToolStripMenuItem();
             exportImagesToolStripMenuItem = new ToolStripMenuItem();
+            updateAllTexturesToolStripMenuItem = new ToolStripMenuItem();
+            saveToolStripMenuItem = new ToolStripMenuItem();
+            saveAsToolStripMenuItem = new ToolStripMenuItem();
             openFileDialog = new OpenFileDialog();
             tableLayoutPanel1 = new TableLayoutPanel();
             statusStrip1 = new StatusStrip();
@@ -78,7 +81,7 @@ namespace RDBExplorer.Forms
             // 
             // fileToolStripMenuItem
             // 
-            fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { openToolStripMenuItem, exportImagesToolStripMenuItem });
+            fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { openToolStripMenuItem, exportImagesToolStripMenuItem, updateAllTexturesToolStripMenuItem, saveToolStripMenuItem, saveAsToolStripMenuItem });
             fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             fileToolStripMenuItem.Size = new Size(46, 24);
             fileToolStripMenuItem.Text = "File";
@@ -86,16 +89,41 @@ namespace RDBExplorer.Forms
             // openToolStripMenuItem
             // 
             openToolStripMenuItem.Name = "openToolStripMenuItem";
-            openToolStripMenuItem.Size = new Size(187, 26);
+            openToolStripMenuItem.Size = new Size(224, 26);
             openToolStripMenuItem.Text = "Open";
             openToolStripMenuItem.Click += OpenToolStripMenuItem_Click;
             // 
             // exportImagesToolStripMenuItem
             // 
+            exportImagesToolStripMenuItem.Enabled = false;
             exportImagesToolStripMenuItem.Name = "exportImagesToolStripMenuItem";
-            exportImagesToolStripMenuItem.Size = new Size(187, 26);
+            exportImagesToolStripMenuItem.Size = new Size(224, 26);
             exportImagesToolStripMenuItem.Text = "Export Images";
             exportImagesToolStripMenuItem.Click += exportImagesToolStripMenuItem_Click;
+            // 
+            // updateAllTexturesToolStripMenuItem
+            // 
+            updateAllTexturesToolStripMenuItem.Enabled = false;
+            updateAllTexturesToolStripMenuItem.Name = "updateAllTexturesToolStripMenuItem";
+            updateAllTexturesToolStripMenuItem.Size = new Size(224, 26);
+            updateAllTexturesToolStripMenuItem.Text = "Update All Textures";
+            updateAllTexturesToolStripMenuItem.Click += updateAllTexturesToolStripMenuItem_Click;
+            // 
+            // saveToolStripMenuItem
+            // 
+            saveToolStripMenuItem.Enabled = false;
+            saveToolStripMenuItem.Name = "saveToolStripMenuItem";
+            saveToolStripMenuItem.Size = new Size(224, 26);
+            saveToolStripMenuItem.Text = "Save";
+            saveToolStripMenuItem.Click += saveToolStripMenuItem_Click;
+            // 
+            // saveAsToolStripMenuItem
+            // 
+            saveAsToolStripMenuItem.Enabled = false;
+            saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
+            saveAsToolStripMenuItem.Size = new Size(224, 26);
+            saveAsToolStripMenuItem.Text = "Save as";
+            saveAsToolStripMenuItem.Click += saveAsToolStripMenuItem_Click;
             // 
             // openFileDialog
             // 
@@ -317,7 +345,9 @@ namespace RDBExplorer.Forms
             MainMenuStrip = menuStrip1;
             Margin = new Padding(4, 5, 4, 5);
             Name = "G1ToolForm";
+            StartPosition = FormStartPosition.CenterParent;
             Text = "G1Tool";
+            FormClosing += G1ToolForm_FormClosing;
             Resize += Form_Resize;
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
@@ -363,6 +393,9 @@ namespace RDBExplorer.Forms
         private Label label1;
         private ComboBox mipsComboBox;
         private PropertyGrid texrurePropertyGrid;
+        private ToolStripMenuItem saveToolStripMenuItem;
+        private ToolStripMenuItem saveAsToolStripMenuItem;
+        private ToolStripMenuItem updateAllTexturesToolStripMenuItem;
     }
 }
 

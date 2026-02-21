@@ -5,9 +5,10 @@ namespace RDBExplorer.Forms
 {
     public partial class G1ToolForm : Form
     {
-        private G1T _currentG1T;
+        private G1TParser _currentG1T;
         private G1TTexture _selectedTexture;
-        private string _currentFileName;
+        private string _currentFilePath;
+        private bool _isModified;
 
         public G1ToolForm()
         {
@@ -17,7 +18,7 @@ namespace RDBExplorer.Forms
 
         public G1ToolForm(string fileName, byte[] data) : this()
         {
-            _currentFileName = fileName;
+            _currentFilePath = fileName;
             this.Text = $"G1Tool - {fileName}";
             _ = LoadWithDataAsync(data);
         }
@@ -33,7 +34,7 @@ namespace RDBExplorer.Forms
         {
             try
             {
-                _currentG1T = new G1T();
+                _currentG1T = new G1TParser();
                 _currentG1T.Load(data);
                 PopulateUI();
             }
@@ -47,6 +48,9 @@ namespace RDBExplorer.Forms
         {
             if (_currentG1T?.G1TFile == null)
                 return;
+            textutePrewierPictureBox.Bitmap?.Dispose();
+            mipsComboBox.Items.Clear();
+            layersComboBox.Items.Clear();
 
             textureListView.BeginUpdate();
             textureListView.Items.Clear();
@@ -54,20 +58,24 @@ namespace RDBExplorer.Forms
             for (int i = 0; i < _currentG1T.G1TFile.Textures.Count; i++)
             {
                 var tex = _currentG1T.G1TFile.Textures[i];
-                var item = new ListViewItem(string.IsNullOrEmpty(tex.Name) ? $"Texture_{i}" : tex.Name);
-                item.SubItems.Add($"{tex.Width}x{tex.Height} ({tex.Format})");
-                item.Tag = tex;
-                textureListView.Items.Add(item);
+                AddTextureToListView(tex, i);
             }
             textureListView.EndUpdate();
 
             texrurePropertyGrid.SelectedObject = _currentG1T.G1TFile;
-            toolStripStatusLabel.Text = $"Textures: {_currentG1T.G1TFile.Textures.Count} | Platform: {_currentG1T.G1TFile.Header.Platform}";
 
             if (textureListView.Items.Count > 0)
-            {
                 textureListView.Items[0].Selected = true;
-            }
+        }
+
+        private void AddTextureToListView(G1TTexture tex, int index)
+        {
+            string name = string.IsNullOrEmpty(tex.Name) ? $"Texture_{index:D3}" : tex.Name;
+            tex.Name = name;
+            var item = new ListViewItem(name);
+            item.SubItems.Add($"{tex.Width}x{tex.Height} ({tex.Format})");
+            item.Tag = tex;
+            textureListView.Items.Add(item);
         }
 
         private void TextureListView_MouseClick(object sender, MouseEventArgs e)
@@ -75,17 +83,15 @@ namespace RDBExplorer.Forms
             if (e.Button == MouseButtons.Right && textureListView.FocusedItem != null)
             {
                 var menu = new ContextMenuStrip();
-                menu.Items.Add("Export this texture...", null, (s, args) =>
-                {
-                    ExportSelectedTexture();
-                });
+                menu.Items.Add("Export this texture (All Mips/Layers)...", null, (s, a) => ExportSelectedTexture());
+                menu.Items.Add("Import from folder (Replace Mips/Layers)...", null, (s, a) => InitImportTexture());
                 menu.Show(Cursor.Position);
             }
         }
 
         private void ExportSelectedTexture()
         {
-            if (_selectedTexture == null) 
+            if (_selectedTexture == null)
                 return;
 
             using (var sfd = new SaveFileDialog())
@@ -104,16 +110,77 @@ namespace RDBExplorer.Forms
             }
         }
 
+        private void G1ToolForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (_isModified)
+            {
+                var result = MessageBox.Show("You have unsaved changes. Exit anyway?", "Unsaved Changes",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+                if (result == DialogResult.No)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+            }
+
+            textutePrewierPictureBox.Bitmap?.Dispose();
+        }
+
+        private async void InitImportTexture()
+        {
+            if (_selectedTexture == null)
+                return;
+
+            using (var ofd = new FolderBrowserDialog())
+            {
+                ofd.Multiselect = false;
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    string path = ofd.SelectedPath;
+                    try
+                    {
+                        SetUIState(false);
+                        toolStripStatusLabel.Text = "Importing DDS files...";
+
+                        await Task.Run(() => TextureConverter.ConvertDdsToG1T(_selectedTexture, path));
+
+                        if (textureListView.SelectedItems.Count > 0)
+                        {
+                            var item = textureListView.SelectedItems[0];
+                            item.SubItems[1].Text = $"{_selectedTexture.Width}x{_selectedTexture.Height} ({_selectedTexture.Format})";
+                            item.BackColor = Color.LightGreen;
+                        }
+
+                        texrurePropertyGrid.Refresh();
+                        UpdatePreview();
+                        UpdateModifiedState(true);
+
+                        toolStripStatusLabel.Text = "Import completed.";
+                        MessageBox.Show("Texture replaced. Save file to apply changes.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Import failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    finally
+                    {
+                        SetUIState(true);
+                    }
+                }
+            }
+        }
+
         public async Task LoadWithDataAsync(byte[] data)
         {
             try
             {
                 SetUIState(false);
                 toolStripStatusLabel.Text = "Loading texture data...";
-
+               
                 _currentG1T = await Task.Run(() =>
                 {
-                    var g1t = new G1T();
+                    var g1t = new G1TParser();
                     g1t.Load(data);
                     return g1t;
                 });
@@ -123,10 +190,12 @@ namespace RDBExplorer.Forms
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading G1T: {ex.Message}");
+                MessageBox.Show($"Error loading G1T: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
+                exportImagesToolStripMenuItem.Enabled = true;
+                updateAllTexturesToolStripMenuItem.Enabled = true;
                 SetUIState(true);
             }
         }
@@ -145,9 +214,9 @@ namespace RDBExplorer.Forms
                 openFileDialog.Filter = "KT Textures|*.g1t";
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    _currentFileName = openFileDialog.FileName;
-                    this.Text = $"G1Tool - {Path.GetFileName(_currentFileName)}";
-                    byte[] data = await File.ReadAllBytesAsync(_currentFileName);
+                    _currentFilePath = openFileDialog.FileName;
+                    this.Text = $"G1Tool - {Path.GetFileName(_currentFilePath)}";
+                    byte[] data = await File.ReadAllBytesAsync(_currentFilePath);
                     await LoadWithDataAsync(data);
                 }
             }
@@ -251,7 +320,7 @@ namespace RDBExplorer.Forms
                 if (fbd.ShowDialog() == DialogResult.OK)
                 {
                     string baseFolder = fbd.SelectedPath;
-                    string exportRoot = Path.Combine(baseFolder, $"{Path.GetFileNameWithoutExtension(_currentFileName)}_Exported");
+                    string exportRoot = Path.Combine(baseFolder, $"{Path.GetFileNameWithoutExtension(_currentFilePath)}_Exported");
 
                     if (!Directory.Exists(exportRoot))
                     {
@@ -269,7 +338,8 @@ namespace RDBExplorer.Forms
                             var tex = _currentG1T.G1TFile.Textures[i];
                             string texName = string.IsNullOrEmpty(tex.Name) ? $"Texture_{i:D3}" : tex.Name;
                             string ext = ".dds";
-                            this.Invoke(new Action(() => {
+                            this.Invoke(new Action(() =>
+                            {
                                 toolStripStatusLabel.Text = $"Exporting {texName} ({i + 1}/{texTotal})...";
                             }));
 
@@ -311,5 +381,135 @@ namespace RDBExplorer.Forms
                 }
             }
         }
+
+        #region Save file
+        private async void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_currentG1T == null)
+            {
+                return;
+            }
+            if (string.IsNullOrEmpty(_currentFilePath) || !File.Exists(_currentFilePath))
+            {
+                saveAsToolStripMenuItem_Click(sender, e);
+                return;
+            }
+
+            await SaveFileAsync(_currentFilePath);
+            UpdateModifiedState(false);
+        }
+
+        private async void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_currentG1T == null)
+                return;
+
+            using (var sfd = new SaveFileDialog
+            {
+                Filter = "G1T Texture Archive|*.g1t",
+                FileName = Path.GetFileName(_currentFilePath)
+            })
+            {
+                if (sfd.ShowDialog() == DialogResult.OK)
+                {
+                    _currentFilePath = sfd.FileName;
+                    await SaveFileAsync(_currentFilePath);
+                    this.Text = $"G1Tool - {Path.GetFileName(_currentFilePath)}";
+                    UpdateModifiedState(false);
+                }
+            }
+        }
+
+        private async Task SaveFileAsync(string path)
+        {
+            SetUIState(false);
+            toolStripStatusLabel.Text = "Saving file...";
+            try
+            {
+                byte[] data = await Task.Run(() => _currentG1T.Save());
+                await File.WriteAllBytesAsync(path, data);
+                MessageBox.Show("File saved successfully!", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Save failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                SetUIState(true);
+                toolStripStatusLabel.Text = "Ready";
+            }
+        }
+
+        #endregion
+
+        private void UpdateModifiedState(bool modified)
+        {
+            _isModified = modified;
+            string fileName = string.IsNullOrEmpty(_currentFilePath) ? "Untitled" : Path.GetFileName(_currentFilePath);
+            this.Text = $"G1Tool - {fileName}{(modified ? "*" : "")}";
+            saveToolStripMenuItem.Enabled = modified;
+            saveAsToolStripMenuItem.Enabled = true;
+        }
+
+        private async void updateAllTexturesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_currentG1T?.G1TFile == null)
+                return;
+
+            using (var ofd = new FolderBrowserDialog())
+            {
+                ofd.Multiselect = false;
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    string path = ofd.SelectedPath;
+                    await UpdateAllFromFolderAsync(path);
+                }
+            }
+        }
+
+        public async Task UpdateAllFromFolderAsync(string folderPath)
+        {
+            SetUIState(false);
+            int count = 0;
+            int total = textureListView.Items.Count;
+
+            try
+            {
+                await Task.Run(() =>
+                {
+                    foreach (ListViewItem item in textureListView.Items)
+                    {
+                        var tex = (G1TTexture)item.Tag;
+                        TextureConverter.ConvertDdsToG1T(tex, folderPath);
+
+                        count++;
+
+                        int currentCount = count;
+                        this.Invoke(new Action(() => {
+                            toolStripStatusLabel.Text = $"Updating all textures: {currentCount}/{total}...";
+                            item.SubItems[1].Text = $"{tex.Width}x{tex.Height} ({tex.Format})";
+                            item.BackColor = Color.LightGreen;
+                        }));
+                    }
+                });
+
+                UpdatePreview();
+                texrurePropertyGrid.Refresh();
+                UpdateModifiedState(true);
+                MessageBox.Show($"Batch update finished. {count} textures processed.", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Batch import failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                SetUIState(true);
+                toolStripStatusLabel.Text = "Ready";
+            }
+        }
+
     }
 }

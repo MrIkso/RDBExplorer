@@ -3,7 +3,7 @@ using System.Text;
 
 namespace RDBExplorer.Core.G1T
 {
-    public class G1T
+    public class G1TParser
     {
         public G1TFile G1TFile { get; set; }
 
@@ -88,10 +88,10 @@ namespace RDBExplorer.Core.G1T
                         tex.ExFaces = (uint)(exInfo & 0x000F);
                         uint exArray = (uint)(exInfo >> 4);
 
-                       // if (tex.ExtraHeaderRaw.Length > 10)
-                        //{
+                        if (tex.ExtraHeaderRaw.Length > 10)
+                        {
                             tex.EX_SwizzleType = (EX_SWIZZLE_TYPE)tex.ExtraHeaderRaw[10];
-                       // }
+                        }
 
                         if (tex.LoadType == G1TLoadType.PLANE_ARRAY || tex.LoadType == G1TLoadType.CUBE_ARRAY)
                         {
@@ -344,6 +344,24 @@ namespace RDBExplorer.Core.G1T
 
             byte arrayByte = (byte)(tex.ExtraHeaderRaw[8] & 0x0F | (byte)(tex.ArraySize << 4));
             tex.ExtraHeaderRaw[8] = arrayByte;
+            if (tex.ExtraHeaderRaw.Length > 10)
+            {
+                tex.ExtraHeaderRaw[10] = 0x00;
+                tex.EX_SwizzleType = 0;
+            }
+        }
+
+        public void SaveToFile(string path)
+        {
+            byte[] data = Save();
+            File.WriteAllBytes(path, data);
+        }
+
+        public void UpdateTexture(int index, G1TTexture newTexture)
+        {
+            if (index < 0 || index >= G1TFile.Textures.Count)
+                throw new ArgumentOutOfRangeException(nameof(index));
+            G1TFile.Textures[index] = newTexture;
         }
     }
 }

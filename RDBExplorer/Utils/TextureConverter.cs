@@ -1,6 +1,7 @@
 ﻿using AssetRipper.TextureDecoder.Bc;
 using AssetRipper.TextureDecoder.Rgb;
 using AssetRipper.TextureDecoder.Rgb.Formats;
+using BCnEncoder.Shared.ImageFiles;
 using RDBExplorer.Core.G1T;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
@@ -201,7 +202,7 @@ namespace RDBExplorer.Utils
 
             switch (ext)
             {
-                case ".png": 
+                case ".png":
                     db.SaveAsPng(path);
                     break;
                 case ".jpg":
@@ -211,7 +212,7 @@ namespace RDBExplorer.Utils
                 case ".bmp":
                     db.SaveAsBmp(path);
                     break;
-                case ".tga": 
+                case ".tga":
                     db.SaveAsTga(path);
                     break;
                 case ".hdr":
@@ -223,12 +224,98 @@ namespace RDBExplorer.Utils
                 case ".dds":
                     db.SaveAsDds(path);
                     break;
-                default: 
+                default:
                     db.SaveAsPng(path + ".png");
                     break;
             }
         }
 
+        public static void ConvertDdsToG1T(G1TTexture g1TTexture, string texturesDirPath)
+        {
+            string[] files = Directory.GetFiles(texturesDirPath, "*.dds", SearchOption.AllDirectories);
+            string texPrefix = string.IsNullOrEmpty(g1TTexture.Name) ? "" : g1TTexture.Name;
+
+            foreach (var file in files)
+            {
+                string fileName = Path.GetFileNameWithoutExtension(file);
+                if (!string.IsNullOrEmpty(texPrefix) && !fileName.StartsWith(texPrefix))
+                {
+                    Console.WriteLine($"Skipping {fileName} - prefix mismatch.");
+                    continue;
+                }
+
+                string[] parts = fileName.Split('_');
+                if (parts.Length < 3)
+                {
+                    continue;
+                }
+
+                int mIdx = -1, lIdx = -1;
+                for (int i = parts.Length - 1; i >= 0; i--)
+                {
+                    if (parts[i].StartsWith("M") && int.TryParse(parts[i].Substring(1), out mIdx)) { }
+                    if (parts[i].StartsWith("L") && int.TryParse(parts[i].Substring(1), out lIdx)) { }
+                }
+
+                if (mIdx == -1 || lIdx == -1)
+                {
+                    continue;
+                }
+                using (var fs = new FileStream(file, FileMode.Open, FileAccess.Read))
+                {
+                    DdsFile ddsFile = DdsFile.Load(fs);
+                    DxgiFormat newDxgiFormat = ddsFile.header.ddsPixelFormat.IsDxt10Format 
+                        ? ddsFile.dx10Header.dxgiFormat : ddsFile.header.ddsPixelFormat.DxgiFormat;
+                    uint width = ddsFile.header.dwWidth;
+                    uint height = ddsFile.header.dwHeight;
+
+                    if (mIdx == 0 && lIdx == 0)
+                    {
+                        g1TTexture.Width = width;
+                        g1TTexture.Height = height;
+                        g1TTexture.Format = MapDxgiToG1T(newDxgiFormat);
+                    }
+                    byte[] ddsData = ddsFile.Faces[0].MipMaps[0].Data;
+
+                    EnsureMipAndLayerExists(g1TTexture, mIdx, lIdx, width, height);
+
+                    g1TTexture.MipMaps[mIdx].Layers[lIdx] = ddsData;
+                }
+
+                Console.WriteLine($"Imported: {fileName}");
+            }
+        }
+
+        private static void EnsureMipAndLayerExists(G1TTexture tex, int mipIdx, int layerIdx, uint w, uint h)
+        {
+            while (tex.MipMaps.Count <= mipIdx)
+            {
+                tex.MipMaps.Add(new G1TMipMap { Width = w, Height = h });
+            }
+
+            while (tex.MipMaps[mipIdx].Layers.Count <= layerIdx)
+            {
+                tex.MipMaps[mipIdx].Layers.Add(null);
+            }
+        }
+
+        private static G1TFormat MapDxgiToG1T(DxgiFormat format)
+        {
+            return format switch
+            {
+                DxgiFormat.DxgiFormatBc1Unorm => G1TFormat.BC1_59,
+                DxgiFormat.DxgiFormatBc1UnormSrgb => G1TFormat.BC1_59,
+                DxgiFormat.DxgiFormatBc2Unorm => G1TFormat.BC2_5A,
+                DxgiFormat.DxgiFormatBc3Unorm => G1TFormat.BC3_5B,
+                DxgiFormat.DxgiFormatBc4Unorm => G1TFormat.BC4_5C,
+                DxgiFormat.DxgiFormatBc5Unorm => G1TFormat.BC5_5D,
+                DxgiFormat.DxgiFormatBc7Unorm => G1TFormat.BC7_5F,
+                DxgiFormat.DxgiFormatBc7UnormSrgb => G1TFormat.BC7_5F,
+                DxgiFormat.DxgiFormatB8G8R8A8Unorm => G1TFormat.B8G8R8A8_0A,
+                DxgiFormat.DxgiFormatR8G8B8A8Unorm => G1TFormat.R8G8B8A8_09,
+                _ => throw new Exception($"Unsupported DXGI Format for G1T: {format}")
+            };
+        }
 
         public static byte[]? DecodeG1t(G1TTexture tex, int mipLevel, int layerIndex = 0)
         {
