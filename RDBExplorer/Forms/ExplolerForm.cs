@@ -71,12 +71,10 @@ namespace RDBExplorer.Forms
 
         private void CopySelectedSubItemsToClipboard(int mode)
         {
-            if (archiveList.SelectedItems.Count == 0)
+            if (archiveList.SelectedIndices.Count == 0)
                 return;
 
             var item = _filteredDisplayList[archiveList.SelectedIndices[0]];
-
-            RDBEntry dBEntry = item as RDBEntry;
 
             string textToCopy = string.Empty;
             if (mode == 0)
