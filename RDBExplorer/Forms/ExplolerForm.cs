@@ -18,6 +18,7 @@ namespace RDBExplorer.Forms
         private List<RDBEntry> _filteredDisplayList = new();
         private CancellationTokenSource _filterCts;
         private HashSet<long> _modifiedKtids = new();
+        private string _version = "1.0.1";
 
         public ExplolerForm()
         {
@@ -680,6 +681,11 @@ namespace RDBExplorer.Forms
                 e.SuppressKeyPress = true;
                 e.Handled = true;
             }
+        }
+
+        private void infoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show($"RDB Explorer - by MrIkso\n\nVersion {_version}");
         }
     }
 }

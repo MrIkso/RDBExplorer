@@ -49,6 +49,8 @@
             toolStripStatusLabel = new Label();
             progressBarOperation = new ProgressBar();
             typeFilterComboBox = new RDBExplorer.Controls.CheckedComboBox.CheckedComboBox();
+            aboutToolStripMenuItem = new ToolStripMenuItem();
+            infoToolStripMenuItem = new ToolStripMenuItem();
             menuStrip1.SuspendLayout();
             tableLayoutPanel1.SuspendLayout();
             toolStrip1.SuspendLayout();
@@ -57,7 +59,7 @@
             // menuStrip1
             // 
             menuStrip1.ImageScalingSize = new Size(20, 20);
-            menuStrip1.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, toolsToolStripMenuItem, localeToolStripMenuItem });
+            menuStrip1.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, toolsToolStripMenuItem, localeToolStripMenuItem, aboutToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
             menuStrip1.Size = new Size(800, 28);
@@ -238,6 +240,20 @@
             typeFilterComboBox.TabIndex = 6;
             typeFilterComboBox.ItemCheck += typeFilterComboBox_ItemCheck;
             // 
+            // aboutToolStripMenuItem
+            // 
+            aboutToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { infoToolStripMenuItem });
+            aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
+            aboutToolStripMenuItem.Size = new Size(64, 24);
+            aboutToolStripMenuItem.Text = "About";
+            // 
+            // infoToolStripMenuItem
+            // 
+            infoToolStripMenuItem.Name = "infoToolStripMenuItem";
+            infoToolStripMenuItem.Size = new Size(224, 26);
+            infoToolStripMenuItem.Text = "Info";
+            infoToolStripMenuItem.Click += infoToolStripMenuItem_Click;
+            // 
             // ExplolerForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
@@ -283,5 +299,7 @@
         private ProgressBar progressBarOperation;
         private ToolStripMenuItem g1TTexureToolToolStripMenuItem;
         private Controls.CheckedComboBox.CheckedComboBox typeFilterComboBox;
+        private ToolStripMenuItem aboutToolStripMenuItem;
+        private ToolStripMenuItem infoToolStripMenuItem;
     }
 }
