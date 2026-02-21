@@ -186,6 +186,7 @@
             archiveList.Size = new Size(794, 356);
             archiveList.TabIndex = 0;
             archiveList.UseCompatibleStateImageBehavior = false;
+            archiveList.KeyDown += archiveList_KeyDown;
             archiveList.MouseDoubleClick += archiveList_MouseDoubleClick;
             // 
             // toolStrip1

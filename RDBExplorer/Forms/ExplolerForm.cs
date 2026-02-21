@@ -4,6 +4,7 @@ using RDBExplorer.Core.LayeredFile;
 using RDBExplorer.Core.Models;
 using RDBExplorer.Utils;
 using System.Collections.Concurrent;
+using static RDBExplorer.Utils.ListViewExtentions;
 
 namespace RDBExplorer.Forms
 {
@@ -16,7 +17,7 @@ namespace RDBExplorer.Forms
         private string _currentlyOpenedFile = string.Empty;
         private List<RDBEntry> _filteredDisplayList = new();
         private CancellationTokenSource _filterCts;
-
+        private HashSet<long> _modifiedKtids = new();
 
         public ExplolerForm()
         {
@@ -102,7 +103,8 @@ namespace RDBExplorer.Forms
                          : SortOrder.Ascending;
             _sortColumn = e.Column;
 
-            _filteredDisplayList.Sort((x, y) => {
+            _filteredDisplayList.Sort((x, y) =>
+            {
                 int result = e.Column switch
                 {
                     0 => string.Compare(x.Name, y.Name),
@@ -129,7 +131,10 @@ namespace RDBExplorer.Forms
                 lvi.SubItems.Add(Sizer.Suffix(entry.FileSize, 2));
                 lvi.SubItems.Add(entry.Location.ContainerPath ?? "");
                 lvi.Tag = entry;
-
+                if (_modifiedKtids.Contains(entry.FileKtid))
+                {
+                    lvi.BackColor = Color.LightGreen;
+                }
                 e.Item = lvi;
             }
         }
@@ -153,6 +158,8 @@ namespace RDBExplorer.Forms
                         _archiveExploler.Browse(_currentlyOpenedFile);
                     });
 
+                    _modifiedKtids.Clear();
+                    _filteredDisplayList.Clear();
                     extractAllToolStripMenuItem.Enabled = true;
                     grabNamesToolStripMenuItem.Enabled = true;
                     grabAllMagicHeadersToolStripMenuItem.Enabled = true;
@@ -211,46 +218,56 @@ namespace RDBExplorer.Forms
 
         private async Task UpdateEntryData()
         {
-            if (archiveList.SelectedItems.Count == 0)
+            if (archiveList.SelectedIndices.Count == 0)
             {
                 MessageBox.Show("Select an entry to update", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
+
+            int selectedIndex = archiveList.SelectedIndices[0];
+            var entry = _filteredDisplayList[selectedIndex];
+
             using var ofd = new OpenFileDialog();
             ofd.Title = "Select file to update entry data";
             ofd.Filter = "All files|*.*";
             ofd.Multiselect = false;
 
-            if (ofd.ShowDialog() != DialogResult.OK)
-            {
-                return;
-            }
-            ListViewItem selectedItem = archiveList.SelectedItems[0];
-            var entry = (RDBEntry)selectedItem.Tag;
-            var errors = new ConcurrentBag<string>();
+            if (ofd.ShowDialog() != DialogResult.OK) return;
+
+            string sourceFilePath = ofd.FileName;
+            string errorMessage = null;
+
+            toolStripStatusLabel.Text = "Injecting data...";
 
             await Task.Run(() =>
             {
-
-                byte[] data = File.ReadAllBytes(ofd.FileName);
-                var result = _archiveExploler.InjectData(entry, data, _currentlyOpenedFile);
-                if (!result.IsSuccessed)
+                try
                 {
-                    errors.Add($"[{entry.FileKtid:X8}] {result.ErrorMessage}");
+                    byte[] data = File.ReadAllBytes(sourceFilePath);
+                    var result = _archiveExploler.InjectData(entry, data, _currentlyOpenedFile);
+                    if (!result.IsSuccessed)
+                    {
+                        errorMessage = result.ErrorMessage;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    errorMessage = ex.Message;
                 }
             });
-            if (errors.Count > 0)
+
+            if (errorMessage != null)
             {
-                MessageBox.Show($"Inject with {errors.Count} errors.", "Finished", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show($"Inject failed: {errorMessage}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
             {
-                selectedItem.SubItems[2].Text = Sizer.Suffix(entry.FileSize, 2);
-                selectedItem.SubItems[2].Tag = entry.FileSize;
-                selectedItem.SubItems[3].Text = entry.Location.ContainerPath;
-                selectedItem.BackColor = Color.LightGreen;
+                _modifiedKtids.Add(entry.FileKtid);
+                archiveList.RedrawItems(selectedIndex, selectedIndex, false);
 
-                MessageBox.Show($"Successfully inject files! Updated: {Path.GetFileName(_currentlyOpenedFile)}\n{entry.Location.ContainerPath}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                toolStripStatusLabel.Text = "Inject successful.";
+                MessageBox.Show($"Successfully injected! Updated: {Path.GetFileName(_currentlyOpenedFile)}\nContainer: {entry.Location.ContainerPath}",
+                                "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 
@@ -280,6 +297,8 @@ namespace RDBExplorer.Forms
 
             _contextMenu.Enabled = false;
             archiveList.Enabled = false;
+            toolStripTextBox1.Enabled = false;
+            typeFilterComboBox.Enabled = false;
             progressBarOperation.Value = 0;
             progressBarOperation.Maximum = total;
 
@@ -317,11 +336,17 @@ namespace RDBExplorer.Forms
 
             _contextMenu.Enabled = true;
             archiveList.Enabled = true;
+            toolStripTextBox1.Enabled = true;
+            typeFilterComboBox.Enabled = true;
             toolStripStatusLabel.Text = $"Finished. Errors: {errors.Count}";
 
             if (errors.Count > 0)
             {
-                MessageBox.Show($"Completed with {errors.Count} errors.", "Finished", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                string errorLog = string.Join(Environment.NewLine, errors.Take(10));
+                if (errors.Count > 10) errorLog += Environment.NewLine + "...and more.";
+
+                MessageBox.Show($"Completed with {errors.Count} errors.{Environment.NewLine}{Environment.NewLine}Log:{Environment.NewLine}{errorLog}",
+                    "Finished", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             else
             {
@@ -629,6 +654,32 @@ namespace RDBExplorer.Forms
             {
                 ShowFiles(toolStripTextBox1.Text);
             }));
+        }
+
+        private void SelectAllItems()
+        {
+            if (archiveList.VirtualListSize == 0)
+            {
+                return;
+            }
+
+            archiveList.Focus();
+
+            LVITEM lvi = new LVITEM();
+            lvi.state = LVIS_SELECTED;
+            lvi.stateMask = LVIS_SELECTED;
+
+            SendMessage(archiveList.Handle, LVM_SETITEMSTATE, -1, ref lvi);
+        }
+
+        private void archiveList_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Control && e.KeyCode == Keys.A)
+            {
+                SelectAllItems();
+                e.SuppressKeyPress = true;
+                e.Handled = true;
+            }
         }
     }
 }
