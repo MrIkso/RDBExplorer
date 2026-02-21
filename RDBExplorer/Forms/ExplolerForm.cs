@@ -14,6 +14,9 @@ namespace RDBExplorer.Forms
         private int _sortColumn = -1;
         private SortOrder _sortOrder = SortOrder.Ascending;
         private string _currentlyOpenedFile = string.Empty;
+        private List<RDBEntry> _filteredDisplayList = new();
+        private CancellationTokenSource _filterCts;
+
 
         public ExplolerForm()
         {
@@ -33,6 +36,9 @@ namespace RDBExplorer.Forms
             archiveList.Columns.Add("Type", 120);
             archiveList.Columns.Add("Size", 100);
             archiveList.Columns.Add("Container", 200);
+            archiveList.VirtualMode = true;
+            archiveList.VirtualListSize = 0;
+            archiveList.RetrieveVirtualItem += ArchiveList_RetrieveVirtualItem;
         }
 
         private void SetupContextMenu()
@@ -66,22 +72,22 @@ namespace RDBExplorer.Forms
             if (archiveList.SelectedItems.Count == 0)
                 return;
 
-            var item = archiveList.SelectedItems.Cast<ListViewItem>().First();
+            var item = _filteredDisplayList[archiveList.SelectedIndices[0]];
 
-            RDBEntry dBEntry = item.Tag as RDBEntry;
+            RDBEntry dBEntry = item as RDBEntry;
 
             string textToCopy = string.Empty;
             if (mode == 0)
             {
-                textToCopy = dBEntry.Name;
+                textToCopy = item.Name;
             }
             else if (mode == 1)
             {
-                textToCopy = dBEntry.TypeInfoKtid.ToString("X");
+                textToCopy = item.TypeInfoKtid.ToString("X");
             }
             else if (mode == 2)
             {
-                textToCopy = dBEntry.Location.ContainerPath;
+                textToCopy = item.Location.ContainerPath;
             }
             if (!string.IsNullOrEmpty(textToCopy))
             {
@@ -91,17 +97,41 @@ namespace RDBExplorer.Forms
 
         private void ArchiveList_ColumnClick(object sender, ColumnClickEventArgs e)
         {
-            if (e.Column == _sortColumn)
+            _sortOrder = (e.Column == _sortColumn && _sortOrder == SortOrder.Ascending)
+                         ? SortOrder.Descending
+                         : SortOrder.Ascending;
+            _sortColumn = e.Column;
+
+            _filteredDisplayList.Sort((x, y) => {
+                int result = e.Column switch
+                {
+                    0 => string.Compare(x.Name, y.Name),
+                    1 => string.Compare(x.TypeName, y.TypeName),
+                    2 => x.FileSize.CompareTo(y.FileSize),
+                    3 => string.Compare(x.Location.ContainerPath, y.Location.ContainerPath),
+                    _ => 0
+                };
+                return (_sortOrder == SortOrder.Ascending) ? result : -result;
+            });
+
+            archiveList.Invalidate();
+        }
+
+        private void ArchiveList_RetrieveVirtualItem(object sender, RetrieveVirtualItemEventArgs e)
+        {
+            if (e.ItemIndex >= 0 && e.ItemIndex < _filteredDisplayList.Count)
             {
-                _sortOrder = (_sortOrder == SortOrder.Ascending) ? SortOrder.Descending : SortOrder.Ascending;
+                var entry = _filteredDisplayList[e.ItemIndex];
+                string displayName = !string.IsNullOrEmpty(entry.Name) ? entry.Name : $"0x{entry.FileKtid:X8}";
+
+                ListViewItem lvi = new ListViewItem(displayName);
+                lvi.SubItems.Add(entry.TypeName ?? "");
+                lvi.SubItems.Add(Sizer.Suffix(entry.FileSize, 2));
+                lvi.SubItems.Add(entry.Location.ContainerPath ?? "");
+                lvi.Tag = entry;
+
+                e.Item = lvi;
             }
-            else
-            {
-                _sortColumn = e.Column;
-                _sortOrder = SortOrder.Ascending;
-            }
-            archiveList.ListViewItemSorter = new ListViewItemComparer(e.Column, _sortOrder);
-            archiveList.Sort();
         }
 
         private async void openToolStripMenuItem_Click(object sender, EventArgs e)
@@ -123,64 +153,60 @@ namespace RDBExplorer.Forms
                         _archiveExploler.Browse(_currentlyOpenedFile);
                     });
 
+                    extractAllToolStripMenuItem.Enabled = true;
+                    grabNamesToolStripMenuItem.Enabled = true;
+                    grabAllMagicHeadersToolStripMenuItem.Enabled = true;
+
+                    PopulateTypeFilter();
                     ShowFiles();
                 }
             }
         }
 
-        private void ShowFiles(string filter = "")
+        private async void ShowFiles(string filter = "")
         {
             if (_archiveExploler?.RDBEntries == null)
                 return;
 
-            archiveList.BeginUpdate();
-            archiveList.Items.Clear();
+            _filterCts?.Cancel();
+            _filterCts = new CancellationTokenSource();
+            var token = _filterCts.Token;
 
-            string search = filter.ToLower().Trim();
+            toolStripStatusLabel.Text = "Filtering...";
 
-            var filteredEntries = _archiveExploler.RDBEntries.Where(entry =>
+            var search = filter.ToLower().Trim();
+            var checkedTypes = new HashSet<string>(typeFilterComboBox.CheckedItems.Cast<string>());
+            bool hasTypeFilter = checkedTypes.Count > 0;
+            bool hasTextFilter = !string.IsNullOrEmpty(search);
+
+            try
             {
-                if (string.IsNullOrEmpty(search))
-                    return true;
-
-                if (entry.Name != null && entry.Name.ToLower().Contains(search))
+                var results = await Task.Run(() =>
                 {
-                    return true;
-                }
+                    IEnumerable<RDBEntry> query = _archiveExploler.RDBEntries;
+                    if (hasTypeFilter)
+                    {
+                        query = query.Where(e => checkedTypes.Contains(e.TypeName ?? "Unknown"));
+                    }
+                    if (hasTextFilter)
+                    {
+                        query = query.Where(entry =>
+                            (entry.Name != null && entry.Name.Contains(search, StringComparison.OrdinalIgnoreCase)) ||
+                            (entry.TypeName != null && entry.TypeName.Contains(search, StringComparison.OrdinalIgnoreCase)) ||
+                            $"0x{entry.FileKtid:X8}".Contains(search, StringComparison.OrdinalIgnoreCase)
+                        );
+                    }
 
-                string hexId = $"0x{entry.FileKtid:X8}".ToLower();
-                if (hexId.Contains(search))
-                {
-                    return true;
-                }
+                    return query.ToList();
+                }, token);
 
-                if (entry.TypeName != null && entry.TypeName.ToLower().Contains(search))
-                {
-                    return true;
-                }
+                _filteredDisplayList = results;
+                archiveList.VirtualListSize = _filteredDisplayList.Count;
+                archiveList.Invalidate();
 
-                return false;
-            });
-
-            var items = filteredEntries.Select(entry =>
-            {
-                string displayName = !string.IsNullOrEmpty(entry.Name) ? entry.Name : $"0x{entry.FileKtid:X8}";
-                ListViewItem item = new ListViewItem(displayName);
-                item.SubItems.Add(entry.TypeName);
-
-                var sizeSubItem = new ListViewItem.ListViewSubItem(item, Sizer.Suffix(entry.FileSize, 2));
-                sizeSubItem.Tag = entry.FileSize;
-                item.SubItems.Add(sizeSubItem);
-
-                item.SubItems.Add(entry.Location.ContainerPath);
-                item.Tag = entry;
-                return item;
-            }).ToArray();
-
-            archiveList.Items.AddRange(items);
-            archiveList.EndUpdate();
-
-            toolStripStatusLabel.Text = $"Files shown: {items.Length} / Total: {_archiveExploler.RDBEntries.Count}";
+                toolStripStatusLabel.Text = $"Files shown: {_filteredDisplayList.Count} / Total: {_archiveExploler.RDBEntries.Count}";
+            }
+            catch (OperationCanceledException) { }
         }
 
         private async Task UpdateEntryData()
@@ -238,8 +264,7 @@ namespace RDBExplorer.Forms
             }
             else
             {
-                entriesToProcess = archiveList.SelectedItems.Cast<ListViewItem>()
-                    .Select(i => (RDBEntry)i.Tag).ToList();
+                entriesToProcess = archiveList.SelectedIndices.Cast<int>().Select(idx => _filteredDisplayList[idx]).ToList();
             }
 
             if (entriesToProcess.Count == 0) return;
@@ -565,19 +590,45 @@ namespace RDBExplorer.Forms
 
         private void archiveList_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            var item = archiveList.SelectedItems.Cast<ListViewItem>().First();
-            RDBEntry dBEntry = item.Tag as RDBEntry;
-            if (dBEntry != null)
+            var item = _filteredDisplayList[archiveList.SelectedIndices[0]];
+            if (item != null)
             {
-                if (dBEntry.TypeInfoKtid == 0xAD57EBBA || dBEntry.TypeInfoKtid == 0xAFBEC60C) {
-                    byte[]? entryData = _archiveExploler.GetEntryData(dBEntry);
+                if (item.TypeInfoKtid == 0xAD57EBBA || item.TypeInfoKtid == 0xAFBEC60C)
+                {
+                    byte[]? entryData = _archiveExploler.GetEntryData(item);
                     if (entryData != null)
                     {
-                        G1ToolForm g1ToolForm = new G1ToolForm(dBEntry.Name, entryData);
+                        G1ToolForm g1ToolForm = new G1ToolForm(item.Name, entryData);
                         g1ToolForm.Show();
                     }
                 }
             }
+        }
+
+        private void PopulateTypeFilter()
+        {
+            if (_archiveExploler?.RDBEntries == null)
+                return;
+            typeFilterComboBox.Text = "Filter by Type";
+            var uniqueTypes = _archiveExploler.RDBEntries.Select(e => e.TypeName ?? "Unknown").Distinct().OrderBy(t => t).ToArray();
+
+            this.Invoke(new Action(() =>
+            {
+                typeFilterComboBox.Items.Clear();
+                foreach (var type in uniqueTypes)
+                {
+                    typeFilterComboBox.Items.Add(type);
+                }
+                typeFilterComboBox.DisplayMember = "Name";
+            }));
+        }
+
+        private void typeFilterComboBox_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            this.BeginInvoke(new Action(() =>
+            {
+                ShowFiles(toolStripTextBox1.Text);
+            }));
         }
     }
 }

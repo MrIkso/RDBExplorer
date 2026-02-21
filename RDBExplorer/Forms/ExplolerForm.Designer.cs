@@ -48,6 +48,7 @@
             toolStripTextBox1 = new ToolStripTextBox();
             toolStripStatusLabel = new Label();
             progressBarOperation = new ProgressBar();
+            typeFilterComboBox = new RDBExplorer.Controls.CheckedComboBox.CheckedComboBox();
             menuStrip1.SuspendLayout();
             tableLayoutPanel1.SuspendLayout();
             toolStrip1.SuspendLayout();
@@ -92,6 +93,7 @@
             // 
             // extractAllToolStripMenuItem
             // 
+            extractAllToolStripMenuItem.Enabled = false;
             extractAllToolStripMenuItem.Name = "extractAllToolStripMenuItem";
             extractAllToolStripMenuItem.Size = new Size(250, 26);
             extractAllToolStripMenuItem.Text = "Extract All";
@@ -99,6 +101,7 @@
             // 
             // grabNamesToolStripMenuItem
             // 
+            grabNamesToolStripMenuItem.Enabled = false;
             grabNamesToolStripMenuItem.Name = "grabNamesToolStripMenuItem";
             grabNamesToolStripMenuItem.Size = new Size(250, 26);
             grabNamesToolStripMenuItem.Text = "Grab Names";
@@ -106,6 +109,7 @@
             // 
             // grabAllMagicHeadersToolStripMenuItem
             // 
+            grabAllMagicHeadersToolStripMenuItem.Enabled = false;
             grabAllMagicHeadersToolStripMenuItem.Name = "grabAllMagicHeadersToolStripMenuItem";
             grabAllMagicHeadersToolStripMenuItem.Size = new Size(250, 26);
             grabAllMagicHeadersToolStripMenuItem.Text = "Grab All Magic Headers";
@@ -162,6 +166,7 @@
             tableLayoutPanel1.Controls.Add(toolStrip1, 0, 0);
             tableLayoutPanel1.Controls.Add(toolStripStatusLabel, 1, 1);
             tableLayoutPanel1.Controls.Add(progressBarOperation, 1, 2);
+            tableLayoutPanel1.Controls.Add(typeFilterComboBox, 1, 0);
             tableLayoutPanel1.Dock = DockStyle.Fill;
             tableLayoutPanel1.Location = new Point(0, 28);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -176,21 +181,20 @@
             // 
             tableLayoutPanel1.SetColumnSpan(archiveList, 2);
             archiveList.Dock = DockStyle.Fill;
-            archiveList.Location = new Point(3, 33);
+            archiveList.Location = new Point(3, 37);
             archiveList.Name = "archiveList";
-            archiveList.Size = new Size(794, 360);
+            archiveList.Size = new Size(794, 356);
             archiveList.TabIndex = 0;
             archiveList.UseCompatibleStateImageBehavior = false;
             archiveList.MouseDoubleClick += archiveList_MouseDoubleClick;
             // 
             // toolStrip1
             // 
-            tableLayoutPanel1.SetColumnSpan(toolStrip1, 2);
             toolStrip1.ImageScalingSize = new Size(20, 20);
             toolStrip1.Items.AddRange(new ToolStripItem[] { toolStripTextBox1 });
             toolStrip1.Location = new Point(0, 0);
             toolStrip1.Name = "toolStrip1";
-            toolStrip1.Size = new Size(800, 30);
+            toolStrip1.Size = new Size(500, 30);
             toolStrip1.TabIndex = 2;
             toolStrip1.Text = "toolStrip1";
             // 
@@ -218,6 +222,20 @@
             progressBarOperation.Name = "progressBarOperation";
             progressBarOperation.Size = new Size(294, 20);
             progressBarOperation.TabIndex = 5;
+            // 
+            // typeFilterComboBox
+            // 
+            typeFilterComboBox.Dock = DockStyle.Top;
+            typeFilterComboBox.DrawMode = DrawMode.OwnerDrawVariable;
+            typeFilterComboBox.DropDownHeight = 1;
+            typeFilterComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            typeFilterComboBox.FormattingEnabled = true;
+            typeFilterComboBox.IntegralHeight = false;
+            typeFilterComboBox.Location = new Point(503, 3);
+            typeFilterComboBox.Name = "typeFilterComboBox";
+            typeFilterComboBox.Size = new Size(294, 28);
+            typeFilterComboBox.TabIndex = 6;
+            typeFilterComboBox.ItemCheck += typeFilterComboBox_ItemCheck;
             // 
             // ExplolerForm
             // 
@@ -263,5 +281,6 @@
         private Label toolStripStatusLabel;
         private ProgressBar progressBarOperation;
         private ToolStripMenuItem g1TTexureToolToolStripMenuItem;
+        private Controls.CheckedComboBox.CheckedComboBox typeFilterComboBox;
     }
 }
