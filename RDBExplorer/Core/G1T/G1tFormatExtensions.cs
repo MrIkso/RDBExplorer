@@ -1,4 +1,6 @@
-﻿namespace RDBExplorer.Core.G1T
+﻿using RDBExplorer.Core.Models;
+
+namespace RDBExplorer.Core.G1T
 {
     public static class G1TFormatUtils
     {
@@ -74,25 +76,69 @@
             }
         }
 
-        public static int CalculateMipSize(G1TTexture tex, uint w, uint h)
+        private static readonly int[] PointSizes = {
+            32, 32, 32, 64, 128, 32, 4, 8, 8, 32, 32, 32, 64, 128, 0, 8,
+            4, 8, 8, 32, 16, 16, 16, 16, 8, 16, 16, 16, 16, 16, 16, 32,
+            32, 32, 32, 32, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            32, 64, 32, 64, 0, 0, 16, 0, 0, 0, 0, 0, 64, 64, 32, 32,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 8, 8, 4, 8, 8, 8,
+            4, 8, 8, 4, 8, 8, 8, 32, 16, 32, 16, 32, 64, 0, 0, 0,
+            0, 0, 8, 16, 32, 16, 32, 16, 32, 0, 0, 0, 0
+        };
+
+        public static int CalculateMipSize(G1TTexture tex, uint w, uint h, KoeiPlatform platform)
         {
-            int bytesPerBlock = GetBytesPerBlock(tex.Format);
-            int bpp = GetBytesPerPixel(tex.Format);
-
-            if (bytesPerBlock > 0)
+            byte fmt = (byte)tex.Format;
+            if (fmt >= PointSizes.Length)
             {
-                uint blocksW = (w + 3) / 4;
-                uint blocksH = (h + 3) / 4;
+                return 0;
+            }
 
-                int mipSize = (int)(blocksW * blocksH * bytesPerBlock);
-                return Math.Max(mipSize, bytesPerBlock);
+            int pointSize = PointSizes[fmt];
+            if (pointSize == 0)
+            {
+                return 0;
+            }
+            int blockSizeInBytes;
+            if (pointSize >= 32)
+            {
+                blockSizeInBytes = pointSize / 8;
             }
             else
             {
-                return (int)(w * h * bpp);
+                blockSizeInBytes = (pointSize * 16) / 8;
             }
+
+            long calculatedSize = ((long)w * h * pointSize) / 8;
+            int mipSize = (int)Math.Max(calculatedSize, blockSizeInBytes);
+
+            int alignment = 0;
+            if (platform == KoeiPlatform.PS4)
+            {
+                alignment = 1024;
+            }
+            else if (platform == KoeiPlatform.WinDX12)
+            {
+                alignment = 4096;
+            }
+            
+            if (alignment > 0)
+            {
+                mipSize = (mipSize + alignment - 1) & ~(alignment - 1);
+            }
+
+            return mipSize;
         }
 
-        public static bool IsCompressed(this G1TFormat format) => GetBytesPerBlock(format) > 0;
+        public static bool IsCompressed(G1TFormat format)
+        {
+            byte f = (byte)format;
+            if (f >= PointSizes.Length)
+            {
+                return false;
+            }
+            return PointSizes[f] < 32 && PointSizes[f] != 0;
+        }
     }
 }

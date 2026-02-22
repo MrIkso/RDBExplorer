@@ -1,31 +1,8 @@
-﻿using System.ComponentModel;
+﻿using RDBExplorer.Core.Models;
+using System.ComponentModel;
 
 namespace RDBExplorer.Core.G1T
 {
-    public enum G1TPlatform : uint
-    {
-        PS2 = 0x00, // <- didn't find a game with g1t files
-        PS3 = 0x01, // Special Tiled Z Morton Swizzling
-        X360 = 0x02, // Extra Special Tiling Swizzling
-        NWii = 0x03, // 
-        NDS = 0x04, // <- didn't find a game with g1t files
-        N3DS = 0x05, // 
-        PSVita = 0x06, // 
-        Android = 0x07, // 
-        iOS = 0x08, // 
-        NWiiU = 0x09, // Big Endian
-        WinMac = 0x0A, // They share the same enum
-        PS4 = 0x0B, // Special Z Morton Swizzling
-        //XOne     = 0x0C, // <- Need rom to confrim
-        //???      = 0x0D, //
-        WinDX12 = 0x0E, // 
-        //???      = 0x0F, //
-        NSwitch = 0x10, // 
-        //???      = 0x11, //
-        //???      = 0x12, //
-        PS5 = 0x13, //
-    }
-
     public enum G1TLoadType : byte
     {
         PLANAR = 0,
@@ -108,6 +85,7 @@ namespace RDBExplorer.Core.G1T
 
     public enum EX_SWIZZLE_TYPE: byte
     {
+        NONE = 0,
         DX12_64kb       = 0x01,
         ZLIB_COMPRESSED = 0x03, // new to v66
     };
@@ -121,7 +99,7 @@ namespace RDBExplorer.Core.G1T
         public uint FileSize { get; set; }
         public uint TableOffset { get; set; }
         public uint NumTextures { get; set; }
-        public G1TPlatform Platform { get; set; }
+        public KoeiPlatform Platform { get; set; }
         public uint MetadataSize { get; set; }
         public uint Unk1C { get; set; }
         public byte[] GlobalMetadata { get; set; }
@@ -140,11 +118,12 @@ namespace RDBExplorer.Core.G1T
     {
         public G1TLoadType LoadType { get; set; }
         public G1TFormat Format { get; set; }
-        public EX_SWIZZLE_TYPE EX_SwizzleType { get; set; } = 0x0;
+        public EX_SWIZZLE_TYPE EX_SwizzleType { get; set; } = EX_SWIZZLE_TYPE.NONE;
         public uint Width { get; set; }
         public uint Height { get; set; }
         public uint ZScale { get; set; }
 
+        public int MipCount { get; set; }
         public uint ExFaces { get; set; }
         public uint Depth { get; set; }
         public byte[] Metadata { get; set; }

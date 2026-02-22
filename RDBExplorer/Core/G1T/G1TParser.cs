@@ -1,4 +1,6 @@
-﻿using System.IO.Compression;
+﻿using RDBExplorer.Core.Models;
+using RDBExplorer.Utils;
+using System.IO.Compression;
 using System.Text;
 
 namespace RDBExplorer.Core.G1T
@@ -24,18 +26,28 @@ namespace RDBExplorer.Core.G1T
                 G1TFile.Header = new G1THeader
                 {
                     Magic = br.ReadUInt32(),
-                    Version = br.ReadUInt32(),
-                    FileSize = br.ReadUInt32(),
-                    TableOffset = br.ReadUInt32(),
-                    NumTextures = br.ReadUInt32(),
-                    Platform = (G1TPlatform)br.ReadUInt32(),
-                    MetadataSize = br.ReadUInt32(),
-                    Unk1C = br.ReadUInt32()
+                    Version = br.ReadUInt32()
                 };
-
                 if (G1TFile.Header.Magic != 0x47315447)
+                {
                     throw new Exception("Invalid G1T magic");
+                }
 
+                int versionNum = CommonUtils.ParseVersion(G1TFile.Header.Version);
+
+                G1TFile.Header.FileSize = br.ReadUInt32();
+                G1TFile.Header.TableOffset = br.ReadUInt32();
+                G1TFile.Header.NumTextures = br.ReadUInt32();
+
+                if (versionNum >= 50)
+                {
+                    G1TFile.Header.Platform = (KoeiPlatform)br.ReadUInt32();
+                    G1TFile.Header.MetadataSize = br.ReadUInt32();
+                }
+                else if (versionNum >= 30)
+                {
+                    G1TFile.Header.Platform = (KoeiPlatform)br.ReadUInt32();
+                }
 
                 uint[] normalFlags = new uint[G1TFile.Header.NumTextures];
                 for (int i = 0; i < G1TFile.Header.NumTextures; i++)
@@ -62,17 +74,17 @@ namespace RDBExplorer.Core.G1T
                     var tex = new G1TTexture { NormalMapFlags = normalFlags[i] };
 
                     byte mipSys = br.ReadByte();
-                    int mipCount = mipSys >> 4;
+                    tex.MipCount = (byte)(mipSys >> 4);
                     tex.LoadType = (G1TLoadType)(byte)(mipSys & 0x0F);
                     tex.Format = (G1TFormat)br.ReadByte();
 
                     byte dxdy = br.ReadByte();
-
                     tex.Width = (uint)Math.Pow(2, dxdy & 0x0F);
                     tex.Height = (uint)Math.Pow(2, dxdy >> 4);
 
                     byte d_ex = br.ReadByte();
                     tex.Depth = (uint)(1 << (d_ex & 0x0F));
+
                     tex.Metadata = br.ReadBytes(3);
                     tex.ExtraHeaderVersion = br.ReadByte();
 
@@ -128,14 +140,14 @@ namespace RDBExplorer.Core.G1T
                     }
                     else
                     {
-                        long dataSize = 0;
-                        uint currW = tex.Width, currH = tex.Height;
-                        for (int m = 0; m < Math.Max(1, mipCount); m++)
-                        {
-                            dataSize += G1TFormatUtils.CalculateMipSize(tex, currW, currH) * tex.Depth * totalLayers;
-                            currW = Math.Max(1, currW / 2); currH = Math.Max(1, currH / 2);
-                        }
-                        textureRawData = br.ReadBytes((int)dataSize);
+                        long nextEntryPos = (i < G1TFile.Header.NumTextures - 1) ? (G1TFile.Header.TableOffset + offsets[i + 1]) : G1TFile.Header.FileSize;
+
+                        long textureDataSize = nextEntryPos - br.BaseStream.Position;
+                        if (textureDataSize < 0)
+                            textureDataSize = 0;
+
+                        textureRawData = new byte[textureDataSize];
+                        textureRawData = br.ReadBytes((int)textureDataSize);
                     }
 
                     using (var texMs = new MemoryStream(textureRawData))
@@ -144,16 +156,23 @@ namespace RDBExplorer.Core.G1T
                         uint currW = tex.Width;
                         uint currH = tex.Height;
                         uint currD = tex.Depth;
-                        int mipsToRead = mipCount == 0 ? 1 : mipCount;
+                        int mipsToRead = tex.MipCount == 0 ? 1 : tex.MipCount;
 
                         for (int m = 0; m < mipsToRead; m++)
                         {
                             var mip = new G1TMipMap { Width = currW, Height = currH };
-                            int singleLayerSize = G1TFormatUtils.CalculateMipSize(tex, currW, currH);
+                            int singleLayerSize = G1TFormatUtils.CalculateMipSize(tex, currW, currH, G1TFile.Header.Platform);
 
                             for (int l = 0; l < totalLayers; l++)
                             {
-                                mip.Layers.Add(texBr.ReadBytes(singleLayerSize * (int)currD));
+                                byte[] layerData = texBr.ReadBytes(singleLayerSize * (int)currD);
+                                if ((tex.EX_SwizzleType == EX_SWIZZLE_TYPE.ZLIB_COMPRESSED || G1TFile.Header.Platform == KoeiPlatform.WinDX12)
+                                    && layerData.Length > 65536)
+                                {
+                                    layerData = DeswizzleD3D12_64KB_BC(layerData, currW, currH, tex.Format);
+                                }
+
+                                mip.Layers.Add(layerData);
                             }
 
                             tex.MipMaps.Add(mip);
@@ -169,9 +188,10 @@ namespace RDBExplorer.Core.G1T
 
         private byte[] DecompressZlibTexture(BinaryReader br, int depth, int planeCount, int facesCount)
         {
-            br.ReadBytes(4); // magic
+            long startPos = br.BaseStream.Position;
+            byte[] magic = br.ReadBytes(4);
             int tableSize = br.ReadInt32();
-            br.ReadInt32(); // Unk
+            int unk = br.ReadInt32();
             int windowSize = br.ReadInt32();
             int meta1Count = br.ReadInt32();
             int chunkCount = br.ReadInt32();
@@ -179,74 +199,127 @@ namespace RDBExplorer.Core.G1T
             int hasUncompChunk = br.ReadInt32();
             int uncompChunkSize = br.ReadInt32();
 
-            for (int i = 0; i < meta1Count * depth * planeCount * facesCount; i++)
+            int metaStride = depth * planeCount * facesCount;
+            for (int i = 0; i < meta1Count * metaStride; i++)
             {
                 int COMPED_META_DATA1 = br.ReadInt32();
                 int COMPED_META_DATA2 = br.ReadInt32();
                 int COMPED_META_DATA3 = br.ReadInt32();
                 int COMPED_META_DATA4 = br.ReadInt32();
             }
-            for (int i = 0; i < meta2Count * depth * planeCount * facesCount; i++)
+            for (int i = 0; i < meta2Count * metaStride; i++)
             {
                 int COMPED_META2_DATA1 = br.ReadInt32();
                 int COMPED_META2_DATA2 = br.ReadInt32();
                 int COMPED_META2_DATA3 = br.ReadInt32();
                 int COMPED_META2_DATA4 = br.ReadInt32();
             }
-            var chunks = new List<(int offset, int size)>();
+
+            var chunkTable = new List<(int offset, int size)>();
             for (int i = 0; i < chunkCount; i++)
             {
-                chunks.Add((br.ReadInt32(), br.ReadInt32()));
+                chunkTable.Add((br.ReadInt32(), br.ReadInt32()));
+            }
+
+            (int offset, int size) uncompChunkInfo = (0, 0);
+            if (hasUncompChunk > 0)
+            {
+                uncompChunkInfo = (br.ReadInt32(), br.ReadInt32());
+            }
+
+            int totalUncompressedSize = (chunkCount * windowSize) + (hasUncompChunk > 0 ? uncompChunkSize : 0);
+            byte[] fullDecompressedData = new byte[totalUncompressedSize];
+
+            for (int j = 0; j < chunkCount; j++)
+            {
+                br.BaseStream.Position = chunkTable[j].offset;
+
+                uint compressedDataSize = br.ReadUInt32();
+                byte[] compressedData = br.ReadBytes((int)compressedDataSize);
+
+                int outputOffset = j * windowSize;
+
+                using (var ms = new MemoryStream(compressedData))
+                using (var zs = new ZLibStream(ms, CompressionMode.Decompress))
+                {
+                    using (var tempMs = new MemoryStream())
+                    {
+                        zs.CopyTo(tempMs);
+                        byte[] decompressedBytes = tempMs.ToArray();
+                        int toCopy = Math.Min(decompressedBytes.Length, windowSize);
+                        Array.Copy(decompressedBytes, 0, fullDecompressedData, outputOffset, toCopy);
+                    }
+                }
             }
 
             if (hasUncompChunk > 0)
             {
-                chunks.Add((br.ReadInt32(), br.ReadInt32()));
+                br.BaseStream.Position = uncompChunkInfo.offset;
+                byte[] lastData = br.ReadBytes(uncompChunkSize);
+
+                int finalOffset = chunkCount * windowSize;
+                int toCopy = Math.Min(lastData.Length, fullDecompressedData.Length - finalOffset);
+                Array.Copy(lastData, 0, fullDecompressedData, finalOffset, toCopy);
             }
 
-            using (var outMs = new MemoryStream())
+            return fullDecompressedData;
+        }
+
+        public static byte[] DeswizzleD3D12_64KB_BC(byte[] src, uint width, uint height, G1TFormat format)
+        {
+            int bytesPerBlock = G1TFormatUtils.GetBytesPerBlock(format);
+            if (bytesPerBlock == 0)
+                return src;
+
+            uint blockWidth = (width + 3) / 4;
+            uint blockHeight = (height + 3) / 4;
+
+            byte[] dst = new byte[src.Length];
+
+            const uint tileSizeValues = 64 * 1024; // 64KB
+            const uint tileRowBytes = 1024;
+            uint tileWidth = (uint)(tileRowBytes / bytesPerBlock);
+            const uint tileHeight = 64;
+
+            uint tilesX = (blockWidth + tileWidth - 1) / tileWidth;
+            uint tilesY = (blockHeight + tileHeight - 1) / tileHeight;
+
+            for (uint ty = 0; ty < tilesY; ++ty)
             {
-                for (int i = 0; i < chunks.Count; i++)
+                for (uint tx = 0; tx < tilesX; ++tx)
                 {
-                    br.BaseStream.Position = chunks[i].offset;
-                    long chunkEnd = chunks[i].offset + chunks[i].size;
+                    uint tileIndex = ty * tilesX + tx;
+                    uint tileBaseOffset = tileIndex * tileSizeValues;
 
-                    if (i == chunkCount && hasUncompChunk > 0)
+                    for (uint row = 0; row < tileHeight; ++row)
                     {
-                        outMs.Write(br.ReadBytes(chunks[i].size), 0, chunks[i].size);
-                    }
-                    else
-                    {
-                        while (br.BaseStream.Position < chunkEnd)
+                        uint y = ty * tileHeight + row;
+                        if (y >= blockHeight)
                         {
-                            if (br.BaseStream.Position + 4 > br.BaseStream.Length)
-                                break;
+                            continue;
+                        }
 
-                            uint compressedBlockSize = br.ReadUInt32();
-                            if (compressedBlockSize == 0)
-                            {
-                                break;
-                            }
-                            byte[] compressedData = br.ReadBytes((int)compressedBlockSize);
+                        uint tileRowSrcOffset = tileBaseOffset + (row * tileRowBytes);
+                        uint dstRowOffset = y * blockWidth * (uint)bytesPerBlock;
+                        uint xOffset = tx * tileWidth;
 
-                            using (var compMs = new MemoryStream(compressedData))
-                            using (var zs = new ZLibStream(compMs, CompressionMode.Decompress))
-                            {
-                                try
-                                {
-                                    zs.CopyTo(outMs);
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine($"Zlib error at chunk {i}: {ex.Message}");
-                                    break;
-                                }
-                            }
+                        if (xOffset >= blockWidth)
+                        {
+                            continue;
+                        }
+
+                        uint copyBlocks = Math.Min(tileWidth, blockWidth - xOffset);
+                        uint copyBytes = copyBlocks * (uint)bytesPerBlock;
+
+                        if (tileRowSrcOffset + copyBytes <= src.Length &&
+                            dstRowOffset + (xOffset * bytesPerBlock) + copyBytes <= dst.Length)
+                        {
+                            Array.Copy(src, (int)tileRowSrcOffset, dst, (int)(dstRowOffset + (xOffset * bytesPerBlock)), (int)copyBytes);
                         }
                     }
                 }
-                return outMs.ToArray();
             }
+            return dst;
         }
 
         public byte[] Save()

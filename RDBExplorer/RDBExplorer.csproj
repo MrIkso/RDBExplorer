@@ -13,10 +13,17 @@
     <PackageReference Include="BCnEncoder.Net" Version="2.2.1" />
     <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="StbImageWriteSharp" Version="1.16.7" />
+    <PackageReference Include="YamlDotNet" Version="16.3.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\PictureBox\ImageViewControls.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="kidstypeinfodb.yml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

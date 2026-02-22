@@ -79,8 +79,8 @@ namespace RDBExplorer.Utils
             AddAsciiSignature("ASRS", ".srsa"),
             AddAsciiSignature("TSRS", ".srst"),
    
-            AddAsciiSignature("G2A_PACK", ".g2a_pack"),
-            AddAsciiSignature("TMG_PACK", ".tmg_pack"),
+            AddAsciiSignature("G2A_PACK", ".g2apack"),
+            AddAsciiSignature("TMG_PACK", ".tmgpack"),
             AddAsciiSignature("TRMD", ".dmrt"),
             AddAsciiSignature("DMPP", ".dmpp"),
         };

@@ -1,10 +1,11 @@
 ﻿using RDBExplorer.Core.Models;
+using RDBExplorer.Core.ObjectDatabaseFile;
 using RDBExplorer.Utils;
 using System.Text;
 
 namespace RDBExplorer.Core
 {
-    internal class ArchiveExploler
+    public class ArchiveExploler
     {
         private const int CHUNK_SIZE_DECOMPRESSED = 0x4000; // 16 KB
 
@@ -34,6 +35,7 @@ namespace RDBExplorer.Core
             if (File.Exists(rdbFilePath))
             {
                 TypeIDHelper.Instance.LoadNamesFromCsv("rdb_names.csv");
+                KidsObjNameTypeIDHelper.Instance.Load("kidstypeinfodb.yml");
             }
             _workDir = Path.GetDirectoryName(rdbFilePath);
             var rdb = new RDBReader();
@@ -239,7 +241,7 @@ namespace RDBExplorer.Core
 
                 Console.WriteLine($"[Success] Injected 0x{entry.FileKtid:X8} with original metadata.");
                 // update rdb enrty in gloal list
-                
+
                 return new WorkerStatus(true);
             }
             catch (Exception ex)
@@ -260,7 +262,7 @@ namespace RDBExplorer.Core
                 long totalBlockSize = 56 + paramsSize + original.Header.ParamDataSize + modData.Length;
 
                 writer.Write(Encoding.ASCII.GetBytes("IDRK"));
-                writer.Write(Encoding.ASCII.GetBytes(original.Header.Version)); 
+                writer.Write(Encoding.ASCII.GetBytes(original.Header.Version));
                 writer.Write(totalBlockSize);
                 writer.Write((long)modData.Length);
                 writer.Write((long)modData.Length);
@@ -320,6 +322,11 @@ namespace RDBExplorer.Core
                 }
                 writer.Write((uint)entry.Location.SizeInContainer);
             }
+        }
+
+        public RDBEntry? FindEntryByKtId(uint ktid)
+        {
+            return RDBEntries.FirstOrDefault(e => e.FileKtid == ktid);
         }
     }
 }
