@@ -30,8 +30,6 @@ namespace RDBExplorer.Forms
         /// </summary>
         private void InitializeComponent()
         {
-            components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AssetViewForm));
             menuStrip1 = new MenuStrip();
             fileToolStripMenuItem = new ToolStripMenuItem();
             saveAsRawToolStripMenuItem = new ToolStripMenuItem();
@@ -43,15 +41,12 @@ namespace RDBExplorer.Forms
             toolStripStatusLabel = new ToolStripStatusLabel();
             fileSizeToolStripStatusLabel = new ToolStripStatusLabel();
             resourceViewTabPage = new TabPage();
-            fastColoredTextBox = new FastColoredTextBox();
             resourceDetailsTabPage = new TabPage();
             propertyResGrid = new PropertyGrid();
             menuStrip1.SuspendLayout();
             tabControl.SuspendLayout();
             resourceRawViewTabPage.SuspendLayout();
             statusStrip.SuspendLayout();
-            resourceViewTabPage.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)fastColoredTextBox).BeginInit();
             resourceDetailsTabPage.SuspendLayout();
             SuspendLayout();
             // 
@@ -153,7 +148,6 @@ namespace RDBExplorer.Forms
             // 
             // resourceViewTabPage
             // 
-            resourceViewTabPage.Controls.Add(fastColoredTextBox);
             resourceViewTabPage.Location = new Point(4, 29);
             resourceViewTabPage.Name = "resourceViewTabPage";
             resourceViewTabPage.Padding = new Padding(3);
@@ -161,40 +155,6 @@ namespace RDBExplorer.Forms
             resourceViewTabPage.TabIndex = 2;
             resourceViewTabPage.Text = "Resource Preview";
             resourceViewTabPage.UseVisualStyleBackColor = true;
-            // 
-            // fastColoredTextBox
-            // 
-            fastColoredTextBox.AutoCompleteBracketsList = new char[]
-    {
-    '(',
-    ')',
-    '{',
-    '}',
-    '[',
-    ']',
-    '"',
-    '"',
-    '\'',
-    '\''
-    };
-            fastColoredTextBox.AutoIndentCharsPatterns = "^\\s*[\\w\\.]+(\\s\\w+)?\\s*(?<range>=)\\s*(?<range>[^;=]+);\r\n^\\s*(case|default)\\s*[^:]*(?<range>:)\\s*(?<range>[^;]+);";
-            fastColoredTextBox.AutoScrollMinSize = new Size(31, 18);
-            fastColoredTextBox.BackBrush = null;
-            fastColoredTextBox.CharHeight = 18;
-            fastColoredTextBox.CharWidth = 10;
-            fastColoredTextBox.DefaultMarkerSize = 8;
-            fastColoredTextBox.DisabledColor = Color.FromArgb(100, 180, 180, 180);
-            fastColoredTextBox.Dock = DockStyle.Fill;
-            fastColoredTextBox.Hotkeys = resources.GetString("fastColoredTextBox.Hotkeys");
-            fastColoredTextBox.IsReplaceMode = false;
-            fastColoredTextBox.Location = new Point(3, 3);
-            fastColoredTextBox.Name = "fastColoredTextBox";
-            fastColoredTextBox.Paddings = new Padding(0);
-            fastColoredTextBox.SelectionColor = Color.FromArgb(60, 0, 0, 255);
-            fastColoredTextBox.ServiceColors = (ServiceColors)resources.GetObject("fastColoredTextBox.ServiceColors");
-            fastColoredTextBox.Size = new Size(798, 376);
-            fastColoredTextBox.TabIndex = 0;
-            fastColoredTextBox.Zoom = 100;
             // 
             // resourceDetailsTabPage
             // 
@@ -235,8 +195,6 @@ namespace RDBExplorer.Forms
             resourceRawViewTabPage.PerformLayout();
             statusStrip.ResumeLayout(false);
             statusStrip.PerformLayout();
-            resourceViewTabPage.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)fastColoredTextBox).EndInit();
             resourceDetailsTabPage.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
@@ -256,6 +214,5 @@ namespace RDBExplorer.Forms
         private StatusStrip statusStrip;
         private ToolStripStatusLabel toolStripStatusLabel;
         private ToolStripStatusLabel fileSizeToolStripStatusLabel;
-        private FastColoredTextBox fastColoredTextBox;
     }
 }

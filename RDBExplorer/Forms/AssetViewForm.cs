@@ -1,4 +1,5 @@
 ﻿using Be.Windows.Forms;
+using RDBExplorer.Controls;
 using RDBExplorer.Core;
 using RDBExplorer.Core.Models;
 using RDBExplorer.Core.Wrappers;
@@ -80,28 +81,36 @@ namespace RDBExplorer.Forms
         {
             try
             {
-                IResourceParser parser = await Task.Run(() =>
+                IResourceParser? parser = await Task.Run(() => ResourceFactory.GetLoadedParser(type, data));
+                if (parser == null)
                 {
-                    return ResourceFactory.GetLoadedParser(type, data);
-                });
+                    MessageBox.Show($"This file type: {type} not supported!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
 
                 CurrentParser = parser;
+                resourceViewTabPage.Controls.Clear();
+                Control viewer;
 
                 if (parser.IsConvertedToText)
                 {
-                    string? jsonData = await Task.Run(() => CurrentParser.GetJsonData());
-                    if (!string.IsNullOrEmpty(jsonData))
-                    {
-                        ShowText(jsonData);
-                    }
-                    else
-                    {
-                        ShowText("// No JSON data available for this format.");
-                    }
+                    var textViewer = new TextViewerControl();
+                    textViewer.Dock = DockStyle.Fill;
+                    resourceViewTabPage.Controls.Add(textViewer);
+
+                    string? jsonData = await Task.Run(() => parser.GetJsonData());
+                    textViewer.SetText(jsonData ?? "// No data");
+                    viewer = textViewer;
                 }
                 else
                 {
+                    var listViewer = new EntryListViewControl();
+                    listViewer.Dock = DockStyle.Fill;
+                    resourceViewTabPage.Controls.Add(listViewer);
 
+                    List<EntryData>? entries = await Task.Run(() => parser.GetEntries());
+                    listViewer.ShowEntries(entries ?? new List<EntryData>());
+                    viewer = listViewer;
                 }
 
                 propertyResGrid.SelectedObject = parser.RawModel;
@@ -109,15 +118,7 @@ namespace RDBExplorer.Forms
             catch (Exception ex)
             {
                 MessageBox.Show($"Error while loading: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                ShowText(string.Empty);
             }
-        }
-
-        private void ShowText(string text)
-        {
-            fastColoredTextBox.Text = text;
-            fastColoredTextBox.Language = FastColoredTextBoxNS.Language.JSON;
-            fastColoredTextBox.ReadOnly = true;
         }
     }
 }
