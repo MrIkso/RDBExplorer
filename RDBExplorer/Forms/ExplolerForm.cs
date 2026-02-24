@@ -1,8 +1,6 @@
 ﻿using RDBExplorer.Core;
-using RDBExplorer.Core.Formats.G1MX;
 using RDBExplorer.Core.Formats.LangFile;
 using RDBExplorer.Core.Formats.LayeredFile;
-using RDBExplorer.Core.Formats.ObjectDatabaseFile;
 using RDBExplorer.Core.Models;
 using RDBExplorer.Utils;
 using System.Collections.Concurrent;
@@ -387,23 +385,7 @@ namespace RDBExplorer.Forms
             await Task.Run(() =>
             {
 
-                var objesctList = _archiveExploler.RDBEntries.FindAll(x => x.Name.EndsWith(".kidsobjdb")).ToList();
-                total = objesctList.Count;
-                foreach (var obj in objesctList)
-                {
-                    current++;
-                    byte[]? data = _archiveExploler.GetEntryData(obj);
-                    BuildGraph(obj.Name, data);
-                    if (current % 50 == 0)
-                    {
-                        this.Invoke(new Action(() =>
-                        {
-                            toolStripStatusLabel.Text = $"Scanning: {current}/{total} | Found: {nameGrabber.GrabbedNames.Count}";
-                        }));
-                    }
-                }
-
-              /*  foreach (var entry in _archiveExploler.RDBEntries)
+                foreach (var entry in _archiveExploler.RDBEntries)
                 {
                     current++;
 
@@ -430,7 +412,7 @@ namespace RDBExplorer.Forms
 
                             if (data != null)
                             {
-                                 nameGrabber.Load(data, entry.FileKtid, false);
+                                nameGrabber.Load(data, entry.FileKtid, false);
                                 grabbedCount++;
                             }
                         }
@@ -444,77 +426,13 @@ namespace RDBExplorer.Forms
                         }));
                     }
                 }
-*/
-                string savePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "grabbed_graph.txt");
-                File.WriteAllText(savePath, stringBuilder.ToString());
-                //nameGrabber.SaveToFile(savePath);
+
+                string savePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "grabbed_names.csv");
+                nameGrabber.SaveToFile(savePath);
             });
 
             MessageBox.Show($"Done! Grabbed {nameGrabber.GrabbedNames.Count} names.\nSaved to: grabbed_names.csv",
                             "Name Grabber", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
-
-        public void SaveToFile(string path, Dictionary<uint, string> typesDict)
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("Hash,InternalName");
-
-            foreach (var kvp in typesDict)
-            {
-                sb.AppendLine($"0x{kvp.Key:X8},\"{kvp.Value}\"");
-            }
-
-            File.WriteAllText(path, sb.ToString(), Encoding.UTF8);
-        }
-
-       
-        private void BuildGraph(string name, byte[] objData)
-        {
-            stringBuilder.AppendLine($"DataBaseName: {name}");
-            KidsObjDbParser kidsObjDbParser = new KidsObjDbParser();
-            kidsObjDbParser.Load(objData);
-            var objects = kidsObjDbParser.KidsOdbObjectFile.Objects;
-            foreach (var obj in objects)
-            {
-                uint physicalFileKtid = 0;
-                if (obj.Columns.Count > 0)
-                {
-                    var firstColumn = obj.Columns[0];
-                    if (firstColumn.Values.Count > 0 && firstColumn.Values[0] is uint val)
-                    {
-                        physicalFileKtid = val;
-                    }
-                }
-                RDBEntry? entry = null;
-                if (physicalFileKtid != 0)
-                {
-                    entry = _archiveExploler.FindEntryByKtId(physicalFileKtid);
-                }
-
-                string logicalName = $"0x{obj.KTID:X8}";
-                string typeName = obj.TypeName ?? $"0x{obj.TypeInfoKTID:X8}";
-
-                stringBuilder.AppendLine($"LogicName: {logicalName}, Type: {typeName}");
-                //Console.WriteLine($"LogicName: {logicalName}, Type: {typeName}");
-                if (entry != null)
-                {
-                    Console.WriteLine($"  -> Found Physical File: {entry.Name} (0x{entry.FileKtid:X8}), IS REf: {obj.IsReference}");
-                    stringBuilder.AppendLine($"Found Physical File: {entry.Name} (0x{entry.FileKtid:X8})");
-
-                }
-                else if (physicalFileKtid != 0)
-                {
-                    {
-                       // Console.WriteLine($"  -> Physical File 0x{physicalFileKtid:X8} not in RDB, IS REf: {obj.IsReference}");
-                    }
-                }
-
-                // save kidsobjdb to json
-
-                //SaveToJsonSystem(kidsObjDbParser, name);
-
-            }
-
         }
 
         private async void grabNamesToolStripMenuItem_Click(object sender, EventArgs e)
@@ -747,21 +665,6 @@ namespace RDBExplorer.Forms
                         var g1ToolForm = new G1ToolForm(item.Name, entryData);
                         g1ToolForm.Show();
                         break;
-/*                    case KTFileType.ObjectDatabaseFile:
-                        var objViewer = new KTIDViewerForm(item.Name, entryData, _archiveExploler);
-                        objViewer.ShowDialog();
-                        break;
-                    case KTFileType.G1MXFile:
-                        G1MXFileParser parser = new G1MXFileParser();
-                        var file = parser.Parse(entryData);
-                        Console.WriteLine(file.KG1M.Text);
-
-                        var depedencises = file.G1MX.G1MXF.GMXM.DependencyList;
-                        foreach (uint dep in depedencises)
-                        {
-                            Console.WriteLine($"0x{dep:X8}");
-                        }
-                        break;*/
                     default:
                         AssetViewForm assetViewForm = new AssetViewForm(item, entryData);
                         assetViewForm.Show();

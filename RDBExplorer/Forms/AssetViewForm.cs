@@ -105,30 +105,11 @@ namespace RDBExplorer.Forms
                 }
 
                 propertyResGrid.SelectedObject = parser.RawModel;
-                UpdateSpecificInfo(CurrentParser);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Помилка при завантаженні: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error while loading: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 ShowText(string.Empty);
-            }
-        }
-
-        private void UpdateSpecificInfo(IResourceParser parser)
-        {
-            switch (parser)
-            {
-                case G1MXWrapper g1mx:
-                    Console.WriteLine($"[G1MX] Version: {g1mx.Model.KG1M.Version}, Chunks: {g1mx.GetEntries().Count}");
-                    break;
-
-                case KTIDWrapper ktid:
-                    Console.WriteLine($"[KTID] Entries: {ktid.Model.Count}");
-                    break;
-
-                default:
-                    Console.WriteLine($"[Unknown] Generic parser loaded.");
-                    break;
             }
         }
 
