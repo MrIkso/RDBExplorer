@@ -33,7 +33,11 @@ namespace RDBExplorer.Forms
 
         private async void TabControl_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (tabControl.SelectedTab == resourceViewTabPage || tabControl.SelectedTab == resourceDetailsTabPage && !_isResourceLoaded)
+           
+            bool isParsedViewActive = tabControl.SelectedTab == resourceViewTabPage;
+            bool isDetailsViewActive = tabControl.SelectedTab == resourceDetailsTabPage;
+
+            if ((isParsedViewActive || isDetailsViewActive) && !_isResourceLoaded)
             {
                 KTFileType fileType = (KTFileType)_entry.TypeInfoKtid;
                 await LoadResourceAsync(fileType, _rawData);

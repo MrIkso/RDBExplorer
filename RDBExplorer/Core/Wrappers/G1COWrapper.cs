@@ -1,18 +1,29 @@
-﻿using RDBExplorer.Core.Formats.KTID;
+﻿using RDBExplorer.Core.Formats.G1CO;
+using RDBExplorer.Core.Formats.G1MX;
 using RDBExplorer.Utils.JsonConverters;
+using System;
+using System.Collections.Generic;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace RDBExplorer.Core.Wrappers
 {
-    public class KTIDWrapper : ResourceWrapper<List<KTIDEntry>>
+    internal class G1COWrapper : ResourceWrapper<G1COFile>
     {
-        private readonly KTIDParser _parser = new KTIDParser();
+        private readonly G1COParser _parser = new G1COParser();
+
+        public override bool IsConvertedToText => true;
+
+        public override List<EntryData> GetEntries()
+        {
+            return new List<EntryData>();
+        }
 
         public override void Load(byte[] data)
         {
-            _parser.Load(data);
-            Model = _parser.Entries;
+            _parser.Parse(data);
+            Model = _parser.GetCOFile;
         }
 
         public override async Task SerializeJsonToStreamAsync(Stream stream)
@@ -23,13 +34,8 @@ namespace RDBExplorer.Core.Wrappers
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             };
-           
+            
             await JsonSerializer.SerializeAsync(stream, Model, options);
         }
-
-        public override List<EntryData> GetEntries() => new();
-
-        public override bool IsConvertedToText => true;
-        
     }
 }

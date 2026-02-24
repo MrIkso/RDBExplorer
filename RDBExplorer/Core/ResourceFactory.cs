@@ -12,6 +12,7 @@ namespace RDBExplorer.Core
                 KTFileType.G1MXFile => new G1MXWrapper(),
                 KTFileType.KTIDFileBinary => new KTIDWrapper(),
                 KTFileType.ObjectDatabaseFile => new KidsObjDbParserWrapper(),
+                KTFileType.G1COFile => new G1COWrapper(),
                 _ => null /*throw new NotSupportedException($"This file type: {type} not supported!")*/
             };
         }

@@ -16,13 +16,14 @@ namespace RDBExplorer.Core.Wrappers
             var result = new List<EntryData>();
             var models = Model?.G1MX?.G1MXF?.GMXM?.G1M_ModelsList;
 
-            if (models == null) return result;
+            if (models == null)
+                return result;
 
             for (int i = 0; i < models.Count; i++)
             {
                 result.Add(new EntryData
                 {
-                    Name = $"Model_{i}_{models[i].Magic}.g1m",
+                    Name = $"Model_{i}.g1m",
                     Data = models[i].Data
                 });
             }
