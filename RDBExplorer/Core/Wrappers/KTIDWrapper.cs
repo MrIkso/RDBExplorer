@@ -1,5 +1,6 @@
 ﻿using RDBExplorer.Core.Formats.KTID;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace RDBExplorer.Core.Wrappers
 {
@@ -13,8 +14,16 @@ namespace RDBExplorer.Core.Wrappers
             Model = _parser.Entries;
         }
 
-        public override string GetJsonData() =>
-            JsonSerializer.Serialize(Model, new JsonSerializerOptions { WriteIndented = true });
+        public override async Task SerializeJsonToStreamAsync(Stream stream)
+        {
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            };
+            await JsonSerializer.SerializeAsync(stream, Model, options);
+        }
 
         public override List<EntryData> GetEntries() => new();
 

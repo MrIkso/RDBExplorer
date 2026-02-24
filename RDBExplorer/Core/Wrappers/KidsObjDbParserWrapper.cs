@@ -15,7 +15,8 @@ namespace RDBExplorer.Core.Wrappers
             Model = _parser.KidsOdbObjectFile;
         }
 
-        public override string GetJsonData() {
+        public override async Task SerializeJsonToStreamAsync(Stream stream)
+        {
             var options = new JsonSerializerOptions
             {
                 WriteIndented = true,
@@ -28,9 +29,7 @@ namespace RDBExplorer.Core.Wrappers
             options.Converters.Add(new JsonVector2Converter());
             options.Converters.Add(new JsonVector3Converter());
             options.Converters.Add(new JsonVector4Converter());
-
-            string jsonString = JsonSerializer.Serialize(Model, options);
-            return jsonString;
+            await JsonSerializer.SerializeAsync(stream, Model, options);
         }
 
         public override List<EntryData> GetEntries() => new();

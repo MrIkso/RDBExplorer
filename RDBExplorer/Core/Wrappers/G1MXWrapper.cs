@@ -11,7 +11,7 @@ namespace RDBExplorer.Core.Wrappers
             Model = _parser.Parse(data);
         }
 
-        public override List<EntryData>? GetEntries()
+        public override List<EntryData> GetEntries()
         {
             var result = new List<EntryData>();
             var models = Model?.G1MX?.G1MXF?.GMXM?.G1M_ModelsList;
@@ -27,11 +27,6 @@ namespace RDBExplorer.Core.Wrappers
                 });
             }
             return result;
-        }
-
-        public override string? GetJsonData()
-        {
-            return null;
         }
 
         public override bool IsConvertedToText => false;

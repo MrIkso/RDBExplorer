@@ -84,7 +84,8 @@ namespace RDBExplorer.Forms
                 IResourceParser? parser = await Task.Run(() => ResourceFactory.GetLoadedParser(type, data));
                 if (parser == null)
                 {
-                    MessageBox.Show($"This file type: {type} not supported!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"The file type '{type}' is not supported for specialized parsing. Data will be displayed in Raw Hex.",
+                        "Parser Not Found", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
 
@@ -97,14 +98,25 @@ namespace RDBExplorer.Forms
                     var textViewer = new TextViewerControl();
                     textViewer.Dock = DockStyle.Fill;
                     resourceViewTabPage.Controls.Add(textViewer);
-
-                    string? jsonData = await Task.Run(() => parser.GetJsonData());
-                    textViewer.SetText(jsonData ?? "// No data");
                     viewer = textViewer;
+
+                    string tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".json");
+
+                    using (var fs = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true))
+                    {
+                        await parser.SerializeJsonToStreamAsync(fs);
+                    }
+                    await textViewer.LoadFromFileAsync(tempFile);
                 }
+
                 else
                 {
                     var listViewer = new EntryListViewControl();
+                    listViewer.OnExportRequested += (sender, entry) =>
+                    {
+                        ExportEntry(entry);
+                    };
+
                     listViewer.Dock = DockStyle.Fill;
                     resourceViewTabPage.Controls.Add(listViewer);
 
@@ -118,6 +130,33 @@ namespace RDBExplorer.Forms
             catch (Exception ex)
             {
                 MessageBox.Show($"Error while loading: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private async void ExportEntry(EntryData entry)
+        {
+            if (entry.Data == null || entry.Data.Length == 0)
+            {
+                MessageBox.Show("No data to export.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            using (SaveFileDialog sfd = new SaveFileDialog())
+            {
+                sfd.FileName = entry.Name;
+                sfd.Filter = "All files (*.*)|*.*";
+
+                if (sfd.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        await Task.Run(() => File.WriteAllBytes(sfd.FileName, entry.Data));
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Failed to save file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
             }
         }
     }

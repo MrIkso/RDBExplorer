@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace RDBExplorer.Core
+﻿namespace RDBExplorer.Core
 {
     public class EntryData
     {
@@ -13,25 +9,30 @@ namespace RDBExplorer.Core
 
     public interface IResourceParser
     {
-        public string? GetJsonData();
+        Task SerializeJsonToStreamAsync(Stream stream);
 
         public List<EntryData> GetEntries();
         void Load(byte[] data);
-        object RawModel { get; }
+        object? RawModel { get; }
 
         public bool IsConvertedToText { get; }
     }
 
     public abstract class ResourceWrapper<TModel> : IResourceParser
     {
-        public TModel Model { get; protected set; }
+        public TModel? Model { get; protected set; }
 
-        public object RawModel => Model;
+        public object? RawModel => Model;
 
         public abstract bool IsConvertedToText { get; }
 
         public abstract void Load(byte[] data);
-        public abstract string? GetJsonData();
+        
+        public virtual Task SerializeJsonToStreamAsync(Stream stream)
+        {
+            throw new NotSupportedException($"{this.GetType().Name} does not support JSON serialization.");
+        }
+
         public abstract List<EntryData> GetEntries();
     }
 }
