@@ -42,6 +42,7 @@ namespace RDBExplorer.Controls
                 File.WriteAllText(_tempFilePath, text, Encoding.UTF8);
                 textBox.OpenBindingFile(_tempFilePath, Encoding.UTF8);
                 textBox.IsChanged = false;
+                isBindedFile = true;
                 textBox.ClearUndo();
                 textBox.SyntaxHighlighter = null;
                 GC.Collect();
@@ -65,7 +66,7 @@ namespace RDBExplorer.Controls
                 _tempFilePath = path;
 
                 textBox.OpenBindingFile(_tempFilePath, Encoding.UTF8);
-
+                isBindedFile = true;
                 textBox.IsChanged = false;
                 textBox.ClearUndo();
                 textBox.SyntaxHighlighter = null;
@@ -97,7 +98,13 @@ namespace RDBExplorer.Controls
             }
             if (!string.IsNullOrEmpty(_tempFilePath) && File.Exists(_tempFilePath))
             {
-                try { File.Delete(_tempFilePath); } catch { }
+                try
+                {
+                    File.Delete(_tempFilePath);
+                }
+                catch
+                {
+                }
                 _tempFilePath = null;
                 GC.Collect();
             }

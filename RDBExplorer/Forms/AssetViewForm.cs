@@ -12,7 +12,8 @@ namespace RDBExplorer.Forms
         private string _currentFileName;
         private byte[] _rawData;
         private RDBEntry _entry;
-        private bool _isResourceLoaded = false; 
+        private bool _isResourceLoaded = false;
+        private TextViewerControl textViewer;
         public IResourceParser CurrentParser { get; private set; }
 
         public AssetViewForm()
@@ -33,7 +34,7 @@ namespace RDBExplorer.Forms
 
         private async void TabControl_SelectedIndexChanged(object sender, EventArgs e)
         {
-           
+
             bool isParsedViewActive = tabControl.SelectedTab == resourceViewTabPage;
             bool isDetailsViewActive = tabControl.SelectedTab == resourceDetailsTabPage;
 
@@ -83,11 +84,12 @@ namespace RDBExplorer.Forms
                 CurrentParser = parser;
                 _isResourceLoaded = true;
 
+                textViewer = null;
                 resourceViewTabPage.Controls.Clear();
 
                 if (parser.IsConvertedToText)
                 {
-                    var textViewer = new TextViewerControl();
+                    textViewer = new TextViewerControl();
                     textViewer.Dock = DockStyle.Fill;
                     resourceViewTabPage.Controls.Add(textViewer);
                     saveParsedResultToolStripMenuItem.Enabled = true;
@@ -148,7 +150,7 @@ namespace RDBExplorer.Forms
 
         private async void saveParsedResultToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (CurrentParser == null || !CurrentParser.IsConvertedToText) 
+            if (CurrentParser == null || !CurrentParser.IsConvertedToText)
                 return;
 
             using (SaveFileDialog sfd = new SaveFileDialog())
@@ -189,16 +191,21 @@ namespace RDBExplorer.Forms
         void UpdateFileSizeStatus()
         {
             if (this.hexBox.ByteProvider == null)
+            {
                 this.fileSizeToolStripStatusLabel.Text = string.Empty;
+            }
             else
+            {
                 this.fileSizeToolStripStatusLabel.Text = Sizer.GetDisplayBytes(this.hexBox.ByteProvider.Length);
+            }
         }
 
         private async void ExportEntry(EntryData entry)
         {
             if (entry.Data == null || entry.Data.Length == 0)
+            {
                 return;
-
+            }
             using (SaveFileDialog sfd = new SaveFileDialog())
             {
                 sfd.FileName = entry.Name;
@@ -208,6 +215,10 @@ namespace RDBExplorer.Forms
                     await File.WriteAllBytesAsync(sfd.FileName, entry.Data);
                 }
             }
+        }
+
+        private void AssetViewForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
         }
     }
 }

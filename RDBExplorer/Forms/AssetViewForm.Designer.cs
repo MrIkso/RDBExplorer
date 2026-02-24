@@ -199,6 +199,7 @@ namespace RDBExplorer.Forms
             Name = "AssetViewForm";
             StartPosition = FormStartPosition.CenterParent;
             Text = "AssetViewForm";
+            FormClosing += AssetViewForm_FormClosing;
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
             tabControl.ResumeLayout(false);
