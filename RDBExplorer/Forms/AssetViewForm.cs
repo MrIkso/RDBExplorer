@@ -47,14 +47,28 @@ namespace RDBExplorer.Forms
 
         void Position_Changed(object sender, EventArgs e)
         {
-            this.toolStripStatusLabel.Text = string.Format("Ln {0}    Col {1}",
-                hexBox.CurrentLine, hexBox.CurrentPositionInLine);
+            if (hexBox == null)
+            {
+                this.toolStripStatusLabel.Text = string.Empty;
+                return;
+            }
 
-            string bitPresentation = string.Empty;
+            var provider = hexBox.ByteProvider;
+            long offset = 0;
+            long selectionLength = 0;
 
-            byte? currentByte = hexBox.ByteProvider != null && hexBox.ByteProvider.Length > hexBox.SelectionStart
-                ? hexBox.ByteProvider.ReadByte(hexBox.SelectionStart)
-                : (byte?)null;
+            if (provider != null)
+            {
+                offset = Math.Max(0, hexBox.SelectionStart);
+                selectionLength = Math.Max(0, hexBox.SelectionLength);
+            }
+
+
+
+            // string byteInfo = currentByte.HasValue ? $"  Byte: 0x{currentByte.Value:X2} ({bitPresentation})" : string.Empty;
+            this.toolStripStatusLabel.Text = string.Format(
+                "Offset: 0x{0:X8}  Selected: {1}",
+                offset, selectionLength);
         }
 
         public async Task LoadResourceAsync(KTFileType type, byte[] data)
@@ -186,6 +200,7 @@ namespace RDBExplorer.Forms
         {
             DynamicByteProvider dynamicByteProvider = new DynamicByteProvider(data);
             hexBox.ByteProvider = dynamicByteProvider;
+            hexBox.ReadOnly = true;
         }
 
         void UpdateFileSizeStatus()
@@ -219,6 +234,11 @@ namespace RDBExplorer.Forms
 
         private void AssetViewForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+        }
+
+        private void hexBox_SelectionLengthChanged(object sender, EventArgs e)
+        {
+            Position_Changed(sender, e);
         }
     }
 }

@@ -132,6 +132,7 @@ namespace RDBExplorer.Forms
             hexBox.TabIndex = 1;
             hexBox.UseFixedBytesPerLine = true;
             hexBox.VScrollBarVisible = true;
+            hexBox.SelectionLengthChanged += hexBox_SelectionLengthChanged;
             hexBox.CurrentLineChanged += Position_Changed;
             hexBox.CurrentPositionInLineChanged += Position_Changed;
             // 
