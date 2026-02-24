@@ -13,6 +13,11 @@ namespace RDBExplorer.Core
                 KTFileType.KTIDFileBinary => new KTIDWrapper(),
                 KTFileType.ObjectDatabaseFile => new KidsObjDbParserWrapper(),
                 KTFileType.G1COFile => new G1COWrapper(),
+                KTFileType.OIDBindTableBinaryFile => new OIDWrapper(),
+                KTFileType.OIDSQTBindTableBinaryFile => new OIDSQWrapper(),
+                KTFileType.OBOROStaticResourceBinaryFile => new OBOROWrapper(),
+                KTFileType.PartsModelGroupBindTableBinaryFile => new GRPWrapper(),
+                KTFileType.StaticScreenLayoutTexInfoFile => new TextInfoWrapper(),
                 _ => null /*throw new NotSupportedException($"This file type: {type} not supported!")*/
             };
         }

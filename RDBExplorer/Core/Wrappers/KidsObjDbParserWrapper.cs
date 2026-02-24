@@ -21,7 +21,7 @@ namespace RDBExplorer.Core.Wrappers
             {
                 WriteIndented = true,
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
             };
 
             options.Converters.Add(new JsonStringEnumConverter());
