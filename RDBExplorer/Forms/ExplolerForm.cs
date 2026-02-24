@@ -1,9 +1,12 @@
 ﻿using RDBExplorer.Core;
-using RDBExplorer.Core.LangFile;
-using RDBExplorer.Core.LayeredFile;
+using RDBExplorer.Core.Formats.G1MX;
+using RDBExplorer.Core.Formats.LangFile;
+using RDBExplorer.Core.Formats.LayeredFile;
+using RDBExplorer.Core.Formats.ObjectDatabaseFile;
 using RDBExplorer.Core.Models;
 using RDBExplorer.Utils;
 using System.Collections.Concurrent;
+using System.Text;
 using static RDBExplorer.Utils.ListViewExtentions;
 
 namespace RDBExplorer.Forms
@@ -19,6 +22,7 @@ namespace RDBExplorer.Forms
         private CancellationTokenSource _filterCts;
         private HashSet<long> _modifiedKtids = new();
         private string _version = "1.0.1";
+        StringBuilder stringBuilder = new StringBuilder();
 
         public ExplolerForm()
         {
@@ -51,10 +55,15 @@ namespace RDBExplorer.Forms
             extractItem.Click += async (s, e) => await ExtractSelectedFiles();
             var copyNameItem = new ToolStripMenuItem("Copy Name");
             copyNameItem.Click += (s, e) => CopySelectedSubItemsToClipboard(0);
+
             var copyTypeItem = new ToolStripMenuItem("Copy Type");
             copyTypeItem.Click += (s, e) => CopySelectedSubItemsToClipboard(1);
+
+            var copyHashItem = new ToolStripMenuItem("Copy Hash");
+            copyHashItem.Click += (s, e) => CopySelectedSubItemsToClipboard(2);
+
             var copyContainerPathItem = new ToolStripMenuItem("Copy Container Name");
-            copyContainerPathItem.Click += (s, e) => CopySelectedSubItemsToClipboard(2);
+            copyContainerPathItem.Click += (s, e) => CopySelectedSubItemsToClipboard(3);
             var injectData = new ToolStripMenuItem("Inject New Data");
             injectData.Click += async (s, e) => await UpdateEntryData();
 
@@ -62,6 +71,7 @@ namespace RDBExplorer.Forms
             _contextMenu.Items.Add(new ToolStripSeparator());
             _contextMenu.Items.Add(copyNameItem);
             _contextMenu.Items.Add(copyTypeItem);
+            _contextMenu.Items.Add(copyHashItem);
             _contextMenu.Items.Add(copyContainerPathItem);
             _contextMenu.Items.Add(new ToolStripSeparator());
             _contextMenu.Items.Add(injectData);
@@ -83,9 +93,13 @@ namespace RDBExplorer.Forms
             }
             else if (mode == 1)
             {
-                textToCopy = item.TypeInfoKtid.ToString("X");
+                textToCopy = $"0x{item.TypeInfoKtid:X8}";
             }
             else if (mode == 2)
+            {
+                textToCopy = $"0x{item.FileKtid:X8}";
+            }
+            else if (mode == 3)
             {
                 textToCopy = item.Location.ContainerPath;
             }
@@ -372,7 +386,24 @@ namespace RDBExplorer.Forms
 
             await Task.Run(() =>
             {
-                foreach (var entry in _archiveExploler.RDBEntries)
+
+                var objesctList = _archiveExploler.RDBEntries.FindAll(x => x.Name.EndsWith(".kidsobjdb")).ToList();
+                total = objesctList.Count;
+                foreach (var obj in objesctList)
+                {
+                    current++;
+                    byte[]? data = _archiveExploler.GetEntryData(obj);
+                    BuildGraph(obj.Name, data);
+                    if (current % 50 == 0)
+                    {
+                        this.Invoke(new Action(() =>
+                        {
+                            toolStripStatusLabel.Text = $"Scanning: {current}/{total} | Found: {nameGrabber.GrabbedNames.Count}";
+                        }));
+                    }
+                }
+
+              /*  foreach (var entry in _archiveExploler.RDBEntries)
                 {
                     current++;
 
@@ -399,7 +430,7 @@ namespace RDBExplorer.Forms
 
                             if (data != null)
                             {
-                                nameGrabber.Load(data, entry.FileKtid, false);
+                                 nameGrabber.Load(data, entry.FileKtid, false);
                                 grabbedCount++;
                             }
                         }
@@ -413,13 +444,77 @@ namespace RDBExplorer.Forms
                         }));
                     }
                 }
-
-                string savePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "grabbed_names.csv");
-                nameGrabber.SaveToFile(savePath);
+*/
+                string savePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "grabbed_graph.txt");
+                File.WriteAllText(savePath, stringBuilder.ToString());
+                //nameGrabber.SaveToFile(savePath);
             });
 
             MessageBox.Show($"Done! Grabbed {nameGrabber.GrabbedNames.Count} names.\nSaved to: grabbed_names.csv",
                             "Name Grabber", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        public void SaveToFile(string path, Dictionary<uint, string> typesDict)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("Hash,InternalName");
+
+            foreach (var kvp in typesDict)
+            {
+                sb.AppendLine($"0x{kvp.Key:X8},\"{kvp.Value}\"");
+            }
+
+            File.WriteAllText(path, sb.ToString(), Encoding.UTF8);
+        }
+
+       
+        private void BuildGraph(string name, byte[] objData)
+        {
+            stringBuilder.AppendLine($"DataBaseName: {name}");
+            KidsObjDbParser kidsObjDbParser = new KidsObjDbParser();
+            kidsObjDbParser.Load(objData);
+            var objects = kidsObjDbParser.KidsOdbObjectFile.Objects;
+            foreach (var obj in objects)
+            {
+                uint physicalFileKtid = 0;
+                if (obj.Columns.Count > 0)
+                {
+                    var firstColumn = obj.Columns[0];
+                    if (firstColumn.Values.Count > 0 && firstColumn.Values[0] is uint val)
+                    {
+                        physicalFileKtid = val;
+                    }
+                }
+                RDBEntry? entry = null;
+                if (physicalFileKtid != 0)
+                {
+                    entry = _archiveExploler.FindEntryByKtId(physicalFileKtid);
+                }
+
+                string logicalName = $"0x{obj.KTID:X8}";
+                string typeName = obj.TypeName ?? $"0x{obj.TypeInfoKTID:X8}";
+
+                stringBuilder.AppendLine($"LogicName: {logicalName}, Type: {typeName}");
+                //Console.WriteLine($"LogicName: {logicalName}, Type: {typeName}");
+                if (entry != null)
+                {
+                    Console.WriteLine($"  -> Found Physical File: {entry.Name} (0x{entry.FileKtid:X8}), IS REf: {obj.IsReference}");
+                    stringBuilder.AppendLine($"Found Physical File: {entry.Name} (0x{entry.FileKtid:X8})");
+
+                }
+                else if (physicalFileKtid != 0)
+                {
+                    {
+                       // Console.WriteLine($"  -> Physical File 0x{physicalFileKtid:X8} not in RDB, IS REf: {obj.IsReference}");
+                    }
+                }
+
+                // save kidsobjdb to json
+
+                //SaveToJsonSystem(kidsObjDbParser, name);
+
+            }
+
         }
 
         private async void grabNamesToolStripMenuItem_Click(object sender, EventArgs e)
@@ -612,20 +707,74 @@ namespace RDBExplorer.Forms
             new G1ToolForm().Show();
         }
 
-        private void archiveList_MouseDoubleClick(object sender, MouseEventArgs e)
+
+        private async void archiveList_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            var item = _filteredDisplayList[archiveList.SelectedIndices[0]];
-            if (item != null)
+            if (archiveList.SelectedIndices.Count == 0)
             {
-                if (item.TypeInfoKtid == 0xAD57EBBA || item.TypeInfoKtid == 0xAFBEC60C)
+                return;
+            }
+
+            int selectedIndex = archiveList.SelectedIndices[0];
+            if (selectedIndex < 0 || selectedIndex >= _filteredDisplayList.Count)
+            {
+                return;
+            }
+
+            var item = _filteredDisplayList[selectedIndex];
+            if (item == null || _archiveExploler == null)
+            {
+                return;
+            }
+
+            KTFileType fileType = (KTFileType)(item.TypeInfoKtid);
+
+            try
+            {
+                this.Cursor = Cursors.WaitCursor;
+                byte[]? entryData = await Task.Run(() => _archiveExploler.GetEntryData(item));
+
+                if (entryData == null)
                 {
-                    byte[]? entryData = _archiveExploler.GetEntryData(item);
-                    if (entryData != null)
-                    {
-                        G1ToolForm g1ToolForm = new G1ToolForm(item.Name, entryData);
-                        g1ToolForm.Show();
-                    }
+                    MessageBox.Show("Failed to load entry data.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
                 }
+
+                switch (fileType)
+                {
+                    case KTFileType.TexContext:
+                    case KTFileType.StreamingTexContext:
+                        var g1ToolForm = new G1ToolForm(item.Name, entryData);
+                        g1ToolForm.Show();
+                        break;
+/*                    case KTFileType.ObjectDatabaseFile:
+                        var objViewer = new KTIDViewerForm(item.Name, entryData, _archiveExploler);
+                        objViewer.ShowDialog();
+                        break;
+                    case KTFileType.G1MXFile:
+                        G1MXFileParser parser = new G1MXFileParser();
+                        var file = parser.Parse(entryData);
+                        Console.WriteLine(file.KG1M.Text);
+
+                        var depedencises = file.G1MX.G1MXF.GMXM.DependencyList;
+                        foreach (uint dep in depedencises)
+                        {
+                            Console.WriteLine($"0x{dep:X8}");
+                        }
+                        break;*/
+                    default:
+                        AssetViewForm assetViewForm = new AssetViewForm(item, entryData);
+                        assetViewForm.Show();
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error reading entry: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
             }
         }
 

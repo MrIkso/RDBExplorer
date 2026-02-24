@@ -1,0 +1,8 @@
+CreateCaret
+ShowCaret
+DestroyCaret
+SetCaretPos
+WM_KEYDOWN
+WM_KEYUP
+WM_CHAR
+S_OK

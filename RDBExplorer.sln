@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RDBExplorer", "RDBExplorer\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageViewControls", "PictureBox\ImageViewControls.csproj", "{9311305E-4AEB-0A94-F7BA-BE58E468B1BB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Be.Windows.Forms.HexBox", "Be.Windows.Forms.HexBox\Be.Windows.Forms.HexBox.csproj", "{07A4627A-DB0D-192D-D4FA-52E0B98BCBB4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{9311305E-4AEB-0A94-F7BA-BE58E468B1BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9311305E-4AEB-0A94-F7BA-BE58E468B1BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9311305E-4AEB-0A94-F7BA-BE58E468B1BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{07A4627A-DB0D-192D-D4FA-52E0B98BCBB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{07A4627A-DB0D-192D-D4FA-52E0B98BCBB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{07A4627A-DB0D-192D-D4FA-52E0B98BCBB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{07A4627A-DB0D-192D-D4FA-52E0B98BCBB4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

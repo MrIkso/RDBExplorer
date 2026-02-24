@@ -2,7 +2,7 @@
 using AssetRipper.TextureDecoder.Rgb;
 using AssetRipper.TextureDecoder.Rgb.Formats;
 using BCnEncoder.Shared.ImageFiles;
-using RDBExplorer.Core.G1T;
+using RDBExplorer.Core.Formats.G1T;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using Color = System.Drawing.Color;
@@ -170,10 +170,21 @@ namespace RDBExplorer.Utils
 
         public static Bitmap CreateBitmapFromRawData(byte[] rawData, int width, int height)
         {
-            Bitmap bmp = new Bitmap(width, height, PixelFormat.Format32bppArgb);
-            BitmapData bmpData = bmp.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, bmp.PixelFormat);
-            Marshal.Copy(rawData, 0, bmpData.Scan0, rawData.Length);
-            bmp.UnlockBits(bmpData);
+            var bmp = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+            var bmpData = bmp.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, bmp.PixelFormat);
+            try
+            {
+                int targetBytes = bmpData.Stride * bmpData.Height;
+                if (rawData.Length != width * height * 4)
+                {
+                    throw new InvalidOperationException($"Decoded data size mismatch: got {rawData.Length}, expected {width * height * 4} (stride*height={targetBytes}).");
+                }
+                Marshal.Copy(rawData, 0, bmpData.Scan0, Math.Min(rawData.Length, targetBytes));
+            }
+            finally
+            {
+                bmp.UnlockBits(bmpData);
+            }
             return bmp;
         }
 

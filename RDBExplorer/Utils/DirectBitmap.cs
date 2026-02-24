@@ -9,7 +9,6 @@ using System.Runtime.InteropServices;
 
 namespace RDBExplorer.Utils
 {
-
     public readonly struct DirectBitmap<TColor, TColorArg>
         where TColorArg : unmanaged
         where TColor : unmanaged, IColor<TColorArg>

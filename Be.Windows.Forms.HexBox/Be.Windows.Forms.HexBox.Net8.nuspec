@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>Be.Windows.Forms.HexBox.Net8</id>
+    <version>2.0.0</version>
+    <title>Be.Windows.Forms.HexBox.Net8</title>
+    <authors>Bernhard Elbl</authors>
+    <owners>The Melding Wars</owners>
+    <projectUrl>https://github.com/harborsiem/Be.HexEditor</projectUrl>
+    <license type="expression">MIT</license>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>HEX editor control for Windows Forms</description>
+    <releaseNotes />
+    <copyright>Copyright (c) 2011-2024 Bernhard Elbl, The Melding Wars</copyright>
+    <language />
+    <tags>winforms forms hex editor control</tags>
+  </metadata>
+</package>

@@ -1,4 +1,4 @@
-﻿using RDBExplorer.Core.G1T;
+﻿using RDBExplorer.Core.Formats.G1T;
 using RDBExplorer.Utils;
 
 namespace RDBExplorer.Forms
