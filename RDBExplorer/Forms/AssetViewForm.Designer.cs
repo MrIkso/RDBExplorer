@@ -33,6 +33,7 @@ namespace RDBExplorer.Forms
             menuStrip1 = new MenuStrip();
             fileToolStripMenuItem = new ToolStripMenuItem();
             saveAsRawToolStripMenuItem = new ToolStripMenuItem();
+            saveParsedResultToolStripMenuItem = new ToolStripMenuItem();
             openInImHexToolStripMenuItem = new ToolStripMenuItem();
             tabControl = new TabControl();
             resourceRawViewTabPage = new TabPage();
@@ -62,7 +63,7 @@ namespace RDBExplorer.Forms
             // 
             // fileToolStripMenuItem
             // 
-            fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { saveAsRawToolStripMenuItem, openInImHexToolStripMenuItem });
+            fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { saveAsRawToolStripMenuItem, saveParsedResultToolStripMenuItem, openInImHexToolStripMenuItem });
             fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             fileToolStripMenuItem.Size = new Size(46, 24);
             fileToolStripMenuItem.Text = "File";
@@ -70,13 +71,22 @@ namespace RDBExplorer.Forms
             // saveAsRawToolStripMenuItem
             // 
             saveAsRawToolStripMenuItem.Name = "saveAsRawToolStripMenuItem";
-            saveAsRawToolStripMenuItem.Size = new Size(191, 26);
+            saveAsRawToolStripMenuItem.Size = new Size(212, 26);
             saveAsRawToolStripMenuItem.Text = "Save as Raw";
+            saveAsRawToolStripMenuItem.Click += saveAsRawToolStripMenuItem_Click;
+            // 
+            // saveParsedResultToolStripMenuItem
+            // 
+            saveParsedResultToolStripMenuItem.Enabled = false;
+            saveParsedResultToolStripMenuItem.Name = "saveParsedResultToolStripMenuItem";
+            saveParsedResultToolStripMenuItem.Size = new Size(212, 26);
+            saveParsedResultToolStripMenuItem.Text = "Save parsed result";
+            saveParsedResultToolStripMenuItem.Click += saveParsedResultToolStripMenuItem_Click;
             // 
             // openInImHexToolStripMenuItem
             // 
             openInImHexToolStripMenuItem.Name = "openInImHexToolStripMenuItem";
-            openInImHexToolStripMenuItem.Size = new Size(191, 26);
+            openInImHexToolStripMenuItem.Size = new Size(212, 26);
             openInImHexToolStripMenuItem.Text = "Open in ImHex";
             // 
             // tabControl
@@ -90,6 +100,7 @@ namespace RDBExplorer.Forms
             tabControl.SelectedIndex = 0;
             tabControl.Size = new Size(812, 415);
             tabControl.TabIndex = 1;
+            tabControl.SelectedIndexChanged += TabControl_SelectedIndexChanged;
             // 
             // resourceRawViewTabPage
             // 
@@ -214,5 +225,6 @@ namespace RDBExplorer.Forms
         private StatusStrip statusStrip;
         private ToolStripStatusLabel toolStripStatusLabel;
         private ToolStripStatusLabel fileSizeToolStripStatusLabel;
+        private ToolStripMenuItem saveParsedResultToolStripMenuItem;
     }
 }

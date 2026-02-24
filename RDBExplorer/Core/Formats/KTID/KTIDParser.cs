@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RDBExplorer.Utils.JsonConverters;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -8,6 +9,8 @@ namespace RDBExplorer.Core.Formats.KTID
     public class KTIDEntry
     {
         public uint Index { get; set; }
+
+        [JsonConverter(typeof(JsonHexUintConverter))]
         public uint KtidHash { get; set; }
     }
 

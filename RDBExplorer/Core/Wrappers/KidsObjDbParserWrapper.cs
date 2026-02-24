@@ -24,9 +24,8 @@ namespace RDBExplorer.Core.Wrappers
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             };
 
-            options.Converters.Add(new JsonHexUintConverter());
             options.Converters.Add(new JsonStringEnumConverter());
-            options.Converters.Add(new JsonVector2Converter());
+            options.Converters.Add(new JsonVectorConverters());
             options.Converters.Add(new JsonVector3Converter());
             options.Converters.Add(new JsonVector4Converter());
             await JsonSerializer.SerializeAsync(stream, Model, options);

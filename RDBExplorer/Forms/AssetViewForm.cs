@@ -2,16 +2,17 @@
 using RDBExplorer.Controls;
 using RDBExplorer.Core;
 using RDBExplorer.Core.Models;
-using RDBExplorer.Core.Wrappers;
 using RDBExplorer.Utils;
 
 namespace RDBExplorer.Forms
 {
     public partial class AssetViewForm : Form
     {
-
         private HexBox hexBox;
-        private string _currentFilePath;
+        private string _currentFileName;
+        private byte[] _rawData;
+        private RDBEntry _entry;
+        private bool _isResourceLoaded = false; 
         public IResourceParser CurrentParser { get; private set; }
 
         public AssetViewForm()
@@ -21,26 +22,22 @@ namespace RDBExplorer.Forms
 
         public AssetViewForm(RDBEntry entry, byte[] data) : this()
         {
-            string name = entry.Name;
-            _currentFilePath = name;
-            this.Text = $"Asset View - {name}";
+            _entry = entry;
+            _rawData = data;
+            _currentFileName = entry.Name;
+            this.Text = $"Asset View - {_currentFileName}";
+
             ShowByteData(data);
             UpdateFileSizeStatus();
-            InitLoadResource(entry, data);
         }
 
-        void UpdateFileSizeStatus()
+        private async void TabControl_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (this.hexBox.ByteProvider == null)
-                this.fileSizeToolStripStatusLabel.Text = string.Empty;
-            else
-                this.fileSizeToolStripStatusLabel.Text = Sizer.GetDisplayBytes(this.hexBox.ByteProvider.Length);
-        }
-
-        private void ShowByteData(byte[] data)
-        {
-            DynamicByteProvider dynamicByteProvider = new DynamicByteProvider(data);
-            hexBox.ByteProvider = dynamicByteProvider;
+            if (tabControl.SelectedTab == resourceViewTabPage || tabControl.SelectedTab == resourceDetailsTabPage && !_isResourceLoaded)
+            {
+                KTFileType fileType = (KTFileType)_entry.TypeInfoKtid;
+                await LoadResourceAsync(fileType, _rawData);
+            }
         }
 
         void Position_Changed(object sender, EventArgs e)
@@ -53,76 +50,61 @@ namespace RDBExplorer.Forms
             byte? currentByte = hexBox.ByteProvider != null && hexBox.ByteProvider.Length > hexBox.SelectionStart
                 ? hexBox.ByteProvider.ReadByte(hexBox.SelectionStart)
                 : (byte?)null;
-
-           /* BitInfo bitInfo = currentByte != null ? new BitInfo((byte)currentByte, hexBox.SelectionStart) : null;
-
-            if (bitInfo != null)
-            {
-                byte currentByteNotNull = (byte)currentByte;
-                bitPresentation = string.Format("Bits of Byte {0}: {1}"
-                    , hexBox.SelectionStart
-                    , bitInfo.ToString()
-                    );
-            }
-
-            this.bitToolStripStatusLabel.Text = bitPresentation;
-
-            this.bitControl1.BitInfo = bitInfo;*/
-        }
-
-
-        private async void InitLoadResource(RDBEntry entry, byte[] data)
-        {
-            KTFileType fileType = (KTFileType)entry.TypeInfoKtid;
-            await LoadResourceAsync(fileType, data);
         }
 
         public async Task LoadResourceAsync(KTFileType type, byte[] data)
         {
             try
             {
+                this.Cursor = Cursors.WaitCursor;
+
                 IResourceParser? parser = await Task.Run(() => ResourceFactory.GetLoadedParser(type, data));
+
                 if (parser == null)
                 {
-                    MessageBox.Show($"The file type '{type}' is not supported for specialized parsing. Data will be displayed in Raw Hex.",
-                        "Parser Not Found", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    Label placeholder = new Label();
+                    placeholder.Text = $"Parser for '{type}' not found.\nOnly Raw Hex view is available.";
+                    placeholder.TextAlign = ContentAlignment.MiddleCenter;
+                    placeholder.Dock = DockStyle.Fill;
+                    placeholder.ForeColor = Color.Gray;
+                    placeholder.Font = new Font(this.Font.FontFamily, 12, FontStyle.Regular);
+
+                    resourceViewTabPage.Controls.Add(placeholder);
+
+                    _isResourceLoaded = true;
+                    saveParsedResultToolStripMenuItem.Enabled = false;
                     return;
                 }
 
                 CurrentParser = parser;
+                _isResourceLoaded = true;
+
                 resourceViewTabPage.Controls.Clear();
-                Control viewer;
 
                 if (parser.IsConvertedToText)
                 {
                     var textViewer = new TextViewerControl();
                     textViewer.Dock = DockStyle.Fill;
                     resourceViewTabPage.Controls.Add(textViewer);
-                    viewer = textViewer;
+                    saveParsedResultToolStripMenuItem.Enabled = true;
 
                     string tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".json");
-
                     using (var fs = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true))
                     {
                         await parser.SerializeJsonToStreamAsync(fs);
                     }
                     await textViewer.LoadFromFileAsync(tempFile);
                 }
-
                 else
                 {
                     var listViewer = new EntryListViewControl();
-                    listViewer.OnExportRequested += (sender, entry) =>
-                    {
-                        ExportEntry(entry);
-                    };
-
+                    listViewer.OnExportRequested += (sender, entry) => ExportEntry(entry);
                     listViewer.Dock = DockStyle.Fill;
                     resourceViewTabPage.Controls.Add(listViewer);
 
                     List<EntryData>? entries = await Task.Run(() => parser.GetEntries());
                     listViewer.ShowEntries(entries ?? new List<EntryData>());
-                    viewer = listViewer;
+                    saveParsedResultToolStripMenuItem.Enabled = false;
                 }
 
                 propertyResGrid.SelectedObject = parser.RawModel;
@@ -131,31 +113,95 @@ namespace RDBExplorer.Forms
             {
                 MessageBox.Show($"Error while loading: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+            finally
+            {
+                this.Cursor = Cursors.Default;
+            }
         }
 
-        private async void ExportEntry(EntryData entry)
-        {
-            if (entry.Data == null || entry.Data.Length == 0)
-            {
-                MessageBox.Show("No data to export.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
 
+        private async void saveAsRawToolStripMenuItem_Click(object sender, EventArgs e)
+        {
             using (SaveFileDialog sfd = new SaveFileDialog())
             {
-                sfd.FileName = entry.Name;
+                sfd.FileName = Path.GetFileName(_currentFileName);
                 sfd.Filter = "All files (*.*)|*.*";
 
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
                     try
                     {
-                        await Task.Run(() => File.WriteAllBytes(sfd.FileName, entry.Data));
+                        await File.WriteAllBytesAsync(sfd.FileName, _rawData);
+                        MessageBox.Show("Raw data saved successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"Failed to save file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show($"Failed to save raw data: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
+                }
+            }
+        }
+
+        private async void saveParsedResultToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (CurrentParser == null || !CurrentParser.IsConvertedToText) 
+                return;
+
+            using (SaveFileDialog sfd = new SaveFileDialog())
+            {
+                sfd.FileName = Path.ChangeExtension(_currentFileName, ".json");
+                sfd.Filter = "JSON file (*.json)|*.json|All files (*.*)|*.*";
+
+                if (sfd.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        this.Cursor = Cursors.WaitCursor;
+                        using (var fs = new FileStream(sfd.FileName, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true))
+                        {
+                            await CurrentParser.SerializeJsonToStreamAsync(fs);
+                        }
+                        MessageBox.Show("JSON result saved successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Failed to save JSON: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    finally
+                    {
+                        this.Cursor = Cursors.Default;
+                    }
+                }
+            }
+        }
+
+
+        private void ShowByteData(byte[] data)
+        {
+            DynamicByteProvider dynamicByteProvider = new DynamicByteProvider(data);
+            hexBox.ByteProvider = dynamicByteProvider;
+        }
+
+        void UpdateFileSizeStatus()
+        {
+            if (this.hexBox.ByteProvider == null)
+                this.fileSizeToolStripStatusLabel.Text = string.Empty;
+            else
+                this.fileSizeToolStripStatusLabel.Text = Sizer.GetDisplayBytes(this.hexBox.ByteProvider.Length);
+        }
+
+        private async void ExportEntry(EntryData entry)
+        {
+            if (entry.Data == null || entry.Data.Length == 0)
+                return;
+
+            using (SaveFileDialog sfd = new SaveFileDialog())
+            {
+                sfd.FileName = entry.Name;
+                sfd.Filter = "All files (*.*)|*.*";
+                if (sfd.ShowDialog() == DialogResult.OK)
+                {
+                    await File.WriteAllBytesAsync(sfd.FileName, entry.Data);
                 }
             }
         }
