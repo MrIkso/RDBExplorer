@@ -37,9 +37,10 @@ namespace RDBExplorer.Forms
             archiveList.GridLines = true;
             archiveList.Columns.Clear();
             archiveList.Columns.Add("Name", 250);
-            archiveList.Columns.Add("Type", 120);
+            archiveList.Columns.Add("Type", 200);
             archiveList.Columns.Add("Size", 100);
             archiveList.Columns.Add("Container", 200);
+            archiveList.Columns.Add("Hash", 200);
             archiveList.VirtualMode = true;
             archiveList.VirtualListSize = 0;
             archiveList.RetrieveVirtualItem += ArchiveList_RetrieveVirtualItem;
@@ -122,6 +123,7 @@ namespace RDBExplorer.Forms
                     1 => string.Compare(x.TypeName, y.TypeName),
                     2 => x.FileSize.CompareTo(y.FileSize),
                     3 => string.Compare(x.Location.ContainerPath, y.Location.ContainerPath),
+                    4 => string.Compare(x.Name, y.Name),
                     _ => 0
                 };
                 return (_sortOrder == SortOrder.Ascending) ? result : -result;
@@ -141,6 +143,7 @@ namespace RDBExplorer.Forms
                 lvi.SubItems.Add(entry.TypeName ?? "");
                 lvi.SubItems.Add(Sizer.Suffix(entry.FileSize, 2));
                 lvi.SubItems.Add(entry.Location.ContainerPath ?? "");
+                lvi.SubItems.Add($"0x{entry.FileKtid:X8}");
                 lvi.Tag = entry;
                 if (_modifiedKtids.Contains(entry.FileKtid))
                 {
@@ -308,7 +311,7 @@ namespace RDBExplorer.Forms
 
             _contextMenu.Enabled = false;
             archiveList.Enabled = false;
-            toolStripTextBox1.Enabled = false;
+            filterBox.Enabled = false;
             typeFilterComboBox.Enabled = false;
             progressBarOperation.Value = 0;
             progressBarOperation.Maximum = total;
@@ -347,7 +350,7 @@ namespace RDBExplorer.Forms
 
             _contextMenu.Enabled = true;
             archiveList.Enabled = true;
-            toolStripTextBox1.Enabled = true;
+            filterBox.Enabled = true;
             typeFilterComboBox.Enabled = true;
             toolStripStatusLabel.Text = $"Finished. Errors: {errors.Count}";
 
@@ -591,7 +594,7 @@ namespace RDBExplorer.Forms
 
         private void toolStripTextBox1_TextChanged(object sender, EventArgs e)
         {
-            ShowFiles(toolStripTextBox1.Text);
+            ShowFiles(filterBox.Text);
         }
 
 
@@ -703,7 +706,7 @@ namespace RDBExplorer.Forms
         {
             this.BeginInvoke(new Action(() =>
             {
-                ShowFiles(toolStripTextBox1.Text);
+                ShowFiles(filterBox.Text);
             }));
         }
 

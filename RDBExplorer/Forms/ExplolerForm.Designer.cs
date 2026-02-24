@@ -42,18 +42,16 @@
             localeToolStripMenuItem = new ToolStripMenuItem();
             unpackLocalesToolStripMenuItem = new ToolStripMenuItem();
             packLocalesToolStripMenuItem = new ToolStripMenuItem();
+            aboutToolStripMenuItem = new ToolStripMenuItem();
+            infoToolStripMenuItem = new ToolStripMenuItem();
             tableLayoutPanel1 = new TableLayoutPanel();
             archiveList = new ListView();
-            toolStrip1 = new ToolStrip();
-            toolStripTextBox1 = new ToolStripTextBox();
             toolStripStatusLabel = new Label();
             progressBarOperation = new ProgressBar();
             typeFilterComboBox = new RDBExplorer.Controls.CheckedComboBox.CheckedComboBox();
-            aboutToolStripMenuItem = new ToolStripMenuItem();
-            infoToolStripMenuItem = new ToolStripMenuItem();
+            filterBox = new TextBox();
             menuStrip1.SuspendLayout();
             tableLayoutPanel1.SuspendLayout();
-            toolStrip1.SuspendLayout();
             SuspendLayout();
             // 
             // menuStrip1
@@ -62,7 +60,7 @@
             menuStrip1.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, toolsToolStripMenuItem, localeToolStripMenuItem, aboutToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
-            menuStrip1.Size = new Size(800, 28);
+            menuStrip1.Size = new Size(882, 28);
             menuStrip1.TabIndex = 0;
             menuStrip1.Text = "menuStrip1";
             // 
@@ -159,87 +157,6 @@
             packLocalesToolStripMenuItem.Text = "Pack Locales";
             packLocalesToolStripMenuItem.Click += packLocalesToolStripMenuItem_Click;
             // 
-            // tableLayoutPanel1
-            // 
-            tableLayoutPanel1.ColumnCount = 2;
-            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 62.5F));
-            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 37.5F));
-            tableLayoutPanel1.Controls.Add(archiveList, 1, 0);
-            tableLayoutPanel1.Controls.Add(toolStrip1, 0, 0);
-            tableLayoutPanel1.Controls.Add(toolStripStatusLabel, 1, 1);
-            tableLayoutPanel1.Controls.Add(progressBarOperation, 1, 2);
-            tableLayoutPanel1.Controls.Add(typeFilterComboBox, 1, 0);
-            tableLayoutPanel1.Dock = DockStyle.Fill;
-            tableLayoutPanel1.Location = new Point(0, 28);
-            tableLayoutPanel1.Name = "tableLayoutPanel1";
-            tableLayoutPanel1.RowCount = 3;
-            tableLayoutPanel1.RowStyles.Add(new RowStyle());
-            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            tableLayoutPanel1.RowStyles.Add(new RowStyle());
-            tableLayoutPanel1.Size = new Size(800, 422);
-            tableLayoutPanel1.TabIndex = 1;
-            // 
-            // archiveList
-            // 
-            tableLayoutPanel1.SetColumnSpan(archiveList, 2);
-            archiveList.Dock = DockStyle.Fill;
-            archiveList.Location = new Point(3, 37);
-            archiveList.Name = "archiveList";
-            archiveList.Size = new Size(794, 356);
-            archiveList.TabIndex = 0;
-            archiveList.UseCompatibleStateImageBehavior = false;
-            archiveList.KeyDown += archiveList_KeyDown;
-            archiveList.MouseDoubleClick += archiveList_MouseDoubleClick;
-            // 
-            // toolStrip1
-            // 
-            toolStrip1.ImageScalingSize = new Size(20, 20);
-            toolStrip1.Items.AddRange(new ToolStripItem[] { toolStripTextBox1 });
-            toolStrip1.Location = new Point(0, 0);
-            toolStrip1.Name = "toolStrip1";
-            toolStrip1.Size = new Size(500, 30);
-            toolStrip1.TabIndex = 2;
-            toolStrip1.Text = "toolStrip1";
-            // 
-            // toolStripTextBox1
-            // 
-            toolStripTextBox1.AutoSize = false;
-            toolStripTextBox1.Name = "toolStripTextBox1";
-            toolStripTextBox1.Size = new Size(400, 30);
-            toolStripTextBox1.TextChanged += toolStripTextBox1_TextChanged;
-            // 
-            // toolStripStatusLabel
-            // 
-            toolStripStatusLabel.AutoSize = true;
-            toolStripStatusLabel.Dock = DockStyle.Bottom;
-            toolStripStatusLabel.Location = new Point(3, 402);
-            toolStripStatusLabel.Name = "toolStripStatusLabel";
-            toolStripStatusLabel.Size = new Size(494, 20);
-            toolStripStatusLabel.TabIndex = 4;
-            toolStripStatusLabel.Text = "None";
-            // 
-            // progressBarOperation
-            // 
-            progressBarOperation.Dock = DockStyle.Bottom;
-            progressBarOperation.Location = new Point(503, 399);
-            progressBarOperation.Name = "progressBarOperation";
-            progressBarOperation.Size = new Size(294, 20);
-            progressBarOperation.TabIndex = 5;
-            // 
-            // typeFilterComboBox
-            // 
-            typeFilterComboBox.Dock = DockStyle.Top;
-            typeFilterComboBox.DrawMode = DrawMode.OwnerDrawVariable;
-            typeFilterComboBox.DropDownHeight = 1;
-            typeFilterComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
-            typeFilterComboBox.FormattingEnabled = true;
-            typeFilterComboBox.IntegralHeight = false;
-            typeFilterComboBox.Location = new Point(503, 3);
-            typeFilterComboBox.Name = "typeFilterComboBox";
-            typeFilterComboBox.Size = new Size(294, 28);
-            typeFilterComboBox.TabIndex = 6;
-            typeFilterComboBox.ItemCheck += typeFilterComboBox_ItemCheck;
-            // 
             // aboutToolStripMenuItem
             // 
             aboutToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { infoToolStripMenuItem });
@@ -250,18 +167,93 @@
             // infoToolStripMenuItem
             // 
             infoToolStripMenuItem.Name = "infoToolStripMenuItem";
-            infoToolStripMenuItem.Size = new Size(224, 26);
+            infoToolStripMenuItem.Size = new Size(118, 26);
             infoToolStripMenuItem.Text = "Info";
             infoToolStripMenuItem.Click += infoToolStripMenuItem_Click;
+            // 
+            // tableLayoutPanel1
+            // 
+            tableLayoutPanel1.ColumnCount = 2;
+            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 62.5F));
+            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 37.5F));
+            tableLayoutPanel1.Controls.Add(archiveList, 1, 0);
+            tableLayoutPanel1.Controls.Add(toolStripStatusLabel, 1, 1);
+            tableLayoutPanel1.Controls.Add(progressBarOperation, 1, 2);
+            tableLayoutPanel1.Controls.Add(typeFilterComboBox, 1, 0);
+            tableLayoutPanel1.Controls.Add(filterBox, 0, 0);
+            tableLayoutPanel1.Dock = DockStyle.Fill;
+            tableLayoutPanel1.Location = new Point(0, 28);
+            tableLayoutPanel1.Name = "tableLayoutPanel1";
+            tableLayoutPanel1.RowCount = 3;
+            tableLayoutPanel1.RowStyles.Add(new RowStyle());
+            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            tableLayoutPanel1.RowStyles.Add(new RowStyle());
+            tableLayoutPanel1.Size = new Size(882, 425);
+            tableLayoutPanel1.TabIndex = 1;
+            // 
+            // archiveList
+            // 
+            tableLayoutPanel1.SetColumnSpan(archiveList, 2);
+            archiveList.Dock = DockStyle.Fill;
+            archiveList.Location = new Point(3, 37);
+            archiveList.Name = "archiveList";
+            archiveList.Size = new Size(876, 359);
+            archiveList.TabIndex = 0;
+            archiveList.UseCompatibleStateImageBehavior = false;
+            archiveList.KeyDown += archiveList_KeyDown;
+            archiveList.MouseDoubleClick += archiveList_MouseDoubleClick;
+            // 
+            // toolStripStatusLabel
+            // 
+            toolStripStatusLabel.AutoSize = true;
+            toolStripStatusLabel.Dock = DockStyle.Bottom;
+            toolStripStatusLabel.Location = new Point(3, 405);
+            toolStripStatusLabel.Name = "toolStripStatusLabel";
+            toolStripStatusLabel.Size = new Size(545, 20);
+            toolStripStatusLabel.TabIndex = 4;
+            toolStripStatusLabel.Text = "None";
+            // 
+            // progressBarOperation
+            // 
+            progressBarOperation.Dock = DockStyle.Bottom;
+            progressBarOperation.Location = new Point(554, 402);
+            progressBarOperation.Name = "progressBarOperation";
+            progressBarOperation.Size = new Size(325, 20);
+            progressBarOperation.TabIndex = 5;
+            // 
+            // typeFilterComboBox
+            // 
+            typeFilterComboBox.Dock = DockStyle.Top;
+            typeFilterComboBox.DrawMode = DrawMode.OwnerDrawVariable;
+            typeFilterComboBox.DropDownHeight = 1;
+            typeFilterComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            typeFilterComboBox.FormattingEnabled = true;
+            typeFilterComboBox.IntegralHeight = false;
+            typeFilterComboBox.Location = new Point(554, 3);
+            typeFilterComboBox.Name = "typeFilterComboBox";
+            typeFilterComboBox.Size = new Size(325, 28);
+            typeFilterComboBox.TabIndex = 6;
+            typeFilterComboBox.ItemCheck += typeFilterComboBox_ItemCheck;
+            // 
+            // filterBox
+            // 
+            filterBox.Dock = DockStyle.Top;
+            filterBox.Location = new Point(3, 3);
+            filterBox.Name = "filterBox";
+            filterBox.PlaceholderText = "Enter text to filter";
+            filterBox.Size = new Size(545, 27);
+            filterBox.TabIndex = 7;
+            filterBox.TextChanged += toolStripTextBox1_TextChanged;
             // 
             // ExplolerForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
+            ClientSize = new Size(882, 453);
             Controls.Add(tableLayoutPanel1);
             Controls.Add(menuStrip1);
             MainMenuStrip = menuStrip1;
+            MinimumSize = new Size(800, 400);
             Name = "ExplolerForm";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "ExplolerForm";
@@ -270,8 +262,6 @@
             menuStrip1.PerformLayout();
             tableLayoutPanel1.ResumeLayout(false);
             tableLayoutPanel1.PerformLayout();
-            toolStrip1.ResumeLayout(false);
-            toolStrip1.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -292,8 +282,6 @@
         private ToolStripMenuItem unpackLocalesToolStripMenuItem;
         private ToolStripMenuItem packLocalesToolStripMenuItem;
         private ToolStripMenuItem extractAllToolStripMenuItem;
-        private ToolStrip toolStrip1;
-        private ToolStripTextBox toolStripTextBox1;
         private ToolStripMenuItem grabAllMagicHeadersToolStripMenuItem;
         private Label toolStripStatusLabel;
         private ProgressBar progressBarOperation;
@@ -301,5 +289,6 @@
         private Controls.CheckedComboBox.CheckedComboBox typeFilterComboBox;
         private ToolStripMenuItem aboutToolStripMenuItem;
         private ToolStripMenuItem infoToolStripMenuItem;
+        private TextBox filterBox;
     }
 }
