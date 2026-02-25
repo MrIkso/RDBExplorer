@@ -18,6 +18,7 @@ namespace RDBExplorer.Core
                 KTFileType.OBOROStaticResourceBinaryFile => new OBOROWrapper(),
                 KTFileType.PartsModelGroupBindTableBinaryFile => new GRPWrapper(),
                 KTFileType.StaticScreenLayoutTexInfoFile => new TextInfoWrapper(),
+                KTFileType.TexStageTableBinaryFile => new KTSWrapper(),
                 _ => null /*throw new NotSupportedException($"This file type: {type} not supported!")*/
             };
         }
