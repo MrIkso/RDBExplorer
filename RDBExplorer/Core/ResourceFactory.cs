@@ -19,6 +19,7 @@ namespace RDBExplorer.Core
                 KTFileType.PartsModelGroupBindTableBinaryFile => new GRPWrapper(),
                 KTFileType.StaticScreenLayoutTexInfoFile => new TextInfoWrapper(),
                 KTFileType.TexStageTableBinaryFile => new KTSWrapper(),
+                KTFileType.MaterialGroupBindTableBinaryFile => new MTLWrapper(),
                 _ => null /*throw new NotSupportedException($"This file type: {type} not supported!")*/
             };
         }

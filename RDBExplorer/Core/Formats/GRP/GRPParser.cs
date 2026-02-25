@@ -11,7 +11,7 @@ namespace RDBExplorer.Core.Formats.GRP
     {
         [JsonConverter(typeof(JsonHexUintConverter))]
         public uint KtidHash { get; set; }
-        public uint Unk1 { get; set; }
+        public uint PartsId { get; set; }
         public uint Unk2 { get; set; }
         public uint Unk3 { get; set; }
         public uint Unk4 { get; set; }
