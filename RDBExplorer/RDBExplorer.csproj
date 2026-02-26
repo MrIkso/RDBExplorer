@@ -23,6 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="all_properties.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="kidstypeinfodb.yml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

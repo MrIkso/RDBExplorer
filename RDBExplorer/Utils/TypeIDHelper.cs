@@ -309,7 +309,6 @@ namespace RDBExplorer.Utils
                 0xEB1BE016 => new("CombinedArray"),
                 0x2EEA1225 => new("ForBake"),
 
-
                 _ => new($"Unknown_0x{typeId:X8}", "")
             };
 

@@ -419,6 +419,10 @@ namespace RDBExplorer.Utils
                     case G1TFormat.R16G16B16A16_HALF_FLOAT_0C:
                         RgbConverter.Convert<ColorRGBA<Half>, Half, ColorRGBA<byte>, byte>(dataToDecode, width, height, decodedData);
                         break;
+                    case G1TFormat.R16_FLOAT_6A:
+                    case G1TFormat.R16_FLOAT_77:
+                        RgbConverter.Convert<ColorR<Half>, Half, ColorBGRA<byte>, byte>(dataToDecode, width, height, decodedData);
+                        break;
 
                     default:
                         Console.WriteLine($"Unsupporterd format: {tex.Format}");

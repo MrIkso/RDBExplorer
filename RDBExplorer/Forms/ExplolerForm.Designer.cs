@@ -188,7 +188,7 @@
             tableLayoutPanel1.RowStyles.Add(new RowStyle());
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             tableLayoutPanel1.RowStyles.Add(new RowStyle());
-            tableLayoutPanel1.Size = new Size(882, 425);
+            tableLayoutPanel1.Size = new Size(882, 525);
             tableLayoutPanel1.TabIndex = 1;
             // 
             // archiveList
@@ -197,7 +197,7 @@
             archiveList.Dock = DockStyle.Fill;
             archiveList.Location = new Point(3, 37);
             archiveList.Name = "archiveList";
-            archiveList.Size = new Size(876, 359);
+            archiveList.Size = new Size(876, 459);
             archiveList.TabIndex = 0;
             archiveList.UseCompatibleStateImageBehavior = false;
             archiveList.KeyDown += archiveList_KeyDown;
@@ -207,7 +207,7 @@
             // 
             toolStripStatusLabel.AutoSize = true;
             toolStripStatusLabel.Dock = DockStyle.Bottom;
-            toolStripStatusLabel.Location = new Point(3, 405);
+            toolStripStatusLabel.Location = new Point(3, 505);
             toolStripStatusLabel.Name = "toolStripStatusLabel";
             toolStripStatusLabel.Size = new Size(545, 20);
             toolStripStatusLabel.TabIndex = 4;
@@ -216,7 +216,7 @@
             // progressBarOperation
             // 
             progressBarOperation.Dock = DockStyle.Bottom;
-            progressBarOperation.Location = new Point(554, 402);
+            progressBarOperation.Location = new Point(554, 502);
             progressBarOperation.Name = "progressBarOperation";
             progressBarOperation.Size = new Size(325, 20);
             progressBarOperation.TabIndex = 5;
@@ -249,7 +249,7 @@
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(882, 453);
+            ClientSize = new Size(882, 553);
             Controls.Add(tableLayoutPanel1);
             Controls.Add(menuStrip1);
             MainMenuStrip = menuStrip1;

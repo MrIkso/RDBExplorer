@@ -13,6 +13,8 @@ namespace RDBExplorer.Controls
     public partial class EntryListViewControl : UserControl
     {
         public event EventHandler<EntryData>? OnExportRequested;
+        public event EventHandler<List<EntryData>> OnExtractAllData;
+        private List<EntryData> _entries;
 
         public EntryListViewControl()
         {
@@ -47,6 +49,11 @@ namespace RDBExplorer.Controls
             if (entries == null)
                 return;
 
+            if (_entries != null)
+            {
+                _entries.Clear();
+            }
+            _entries = entries;
             foreach (var entry in entries)
             {
                 var item = new ListViewItem(entry.Name);
@@ -56,6 +63,12 @@ namespace RDBExplorer.Controls
                 item.Tag = entry;
                 entryListView.Items.Add(item);
             }
+            extractAllDataBtn.Enabled = entries.Count > 0;
+        }
+
+        private void extractAllDataBtn_Click(object sender, EventArgs e)
+        {
+            OnExtractAllData?.Invoke(this, _entries);
         }
     }
 }

@@ -28,6 +28,7 @@ namespace RDBExplorer.Core
         }
 
         public List<RDBEntry> RDBEntries { get; private set; }
+        private Dictionary<uint, RDBEntry> _ktidCache = new();
 
         private string _workDir;
 
@@ -37,10 +38,12 @@ namespace RDBExplorer.Core
             {
                 TypeIDHelper.Instance.LoadNamesFromCsv("rdb_names.csv");
                 KidsObjNameTypeIDHelper.Instance.Load("kidstypeinfodb.yml");
+                KidsObjNameTypeIDHelper.Instance.LoadProperties("all_properties.csv");
             }
             _workDir = Path.GetDirectoryName(rdbFilePath);
             var rdb = new RDBReader();
             RDBEntries = rdb.Read(rdbFilePath);
+            _ktidCache = RDBEntries.GroupBy(e => e.FileKtid).ToDictionary(g => g.Key, g => g.First());
         }
 
         public byte[]? GetEntryData(RDBEntry entry)
@@ -327,7 +330,11 @@ namespace RDBExplorer.Core
 
         public RDBEntry? FindEntryByKtId(uint ktid)
         {
-            return RDBEntries.FirstOrDefault(e => e.FileKtid == ktid);
+            if (_ktidCache.TryGetValue(ktid, out var entry))
+            {
+                return entry;
+            }
+            return null;
         }
     }
 }

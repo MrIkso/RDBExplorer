@@ -33,14 +33,17 @@ namespace RDBExplorer.Core.Formats.ObjectDatabaseFile
         public uint TotalSize { get; set; }
     }
 
+    [JsonConverter(typeof(KidsOdbColumnConverter))]
     public class KidsOdbColumn
     {
         public OBJDBPropertyType Type { get; set; }
         public uint RowCount { get; set; }
-        [JsonConverter(typeof(JsonHexUintConverter))]
+       
         public uint PropertyKTID { get; set; }
 
-        [JsonConverter(typeof(JsonKidsOdbValuesConverter))]
+        public string PropertyName => KidsObjNameTypeIDHelper.Instance.GetPropertyName(PropertyKTID);
+
+      
         public List<object> Values { get; set; } = new List<object>();
 
         public override string ToString() => GetFormattedValue();

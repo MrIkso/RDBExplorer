@@ -1,5 +1,6 @@
 ﻿using RDBExplorer.Core.Models;
 using RDBExplorer.Utils;
+using System.Globalization;
 
 namespace RDBExplorer.Core.Formats.ObjectDatabaseFile
 {
@@ -12,6 +13,7 @@ namespace RDBExplorer.Core.Formats.ObjectDatabaseFile
         // Key = FileKtid, Value = Real Name
         private Dictionary<uint, NameInfo> _knownNames = new();
 
+        private Dictionary<uint, string> _knownProperties = new();
         private KidsObjNameTypeIDHelper() { }
 
         public void Load(string path)
@@ -25,6 +27,35 @@ namespace RDBExplorer.Core.Formats.ObjectDatabaseFile
             _knownNames = dictionary;
         }
 
+        public void LoadProperties (string path)
+        {
+            // read from csv
+            if (!File.Exists(path))
+                return;
+
+            _knownProperties.Clear();
+            var lines = File.ReadAllLines(path);
+            foreach (var line in lines)
+            {
+                var parts = line.Split(',');
+                if (parts.Length < 2) continue;
+
+                string hexHash = parts[0].Trim().Replace("0x", "");
+                if (uint.TryParse(hexHash, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out uint ktid))
+                {
+                    _knownProperties[ktid] = parts[1].Trim();
+                }
+            }
+        }
+
+        public string GetPropertyName(uint ktid)
+        {
+            if (_knownProperties.TryGetValue(ktid, out var name))
+            {
+                return name;
+            }
+            return null;
+        }
 
         public string GetFullName(uint ktid)
         {

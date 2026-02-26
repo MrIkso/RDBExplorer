@@ -1,6 +1,7 @@
 ﻿using Be.Windows.Forms;
 using RDBExplorer.Controls;
 using RDBExplorer.Core;
+using RDBExplorer.Core.Formats.ObjectDatabaseFile;
 using RDBExplorer.Core.Models;
 using RDBExplorer.Utils;
 
@@ -13,7 +14,7 @@ namespace RDBExplorer.Forms
         private byte[] _rawData;
         private RDBEntry _entry;
         private bool _isResourceLoaded = false;
-        private TextViewerControl textViewer;
+        private ArchiveExploler _exploler;
         public IResourceParser CurrentParser { get; private set; }
 
         public AssetViewForm()
@@ -21,7 +22,7 @@ namespace RDBExplorer.Forms
             InitializeComponent();
         }
 
-        public AssetViewForm(RDBEntry entry, byte[] data) : this()
+        public AssetViewForm(RDBEntry entry, byte[] data, ArchiveExploler exploler) : this()
         {
             _entry = entry;
             _rawData = data;
@@ -30,6 +31,7 @@ namespace RDBExplorer.Forms
 
             ShowByteData(data);
             UpdateFileSizeStatus();
+            _exploler = exploler;
         }
 
         private async void TabControl_SelectedIndexChanged(object sender, EventArgs e)
@@ -63,8 +65,6 @@ namespace RDBExplorer.Forms
                 selectionLength = Math.Max(0, hexBox.SelectionLength);
             }
 
-
-
             // string byteInfo = currentByte.HasValue ? $"  Byte: 0x{currentByte.Value:X2} ({bitPresentation})" : string.Empty;
             this.toolStripStatusLabel.Text = string.Format(
                 "Offset: 0x{0:X8}  Selected: {1}",
@@ -97,36 +97,41 @@ namespace RDBExplorer.Forms
 
                 CurrentParser = parser;
                 _isResourceLoaded = true;
-
-                textViewer = null;
                 resourceViewTabPage.Controls.Clear();
 
-                if (parser.IsConvertedToText)
+                if (type == KTFileType.ObjectDatabaseFile)
                 {
-                    textViewer = new TextViewerControl();
-                    textViewer.Dock = DockStyle.Fill;
-                    resourceViewTabPage.Controls.Add(textViewer);
-                    saveParsedResultToolStripMenuItem.Enabled = true;
-
-                    string tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".json");
-                    using (var fs = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true))
-                    {
-                        await parser.SerializeJsonToStreamAsync(fs);
-                    }
-                    await textViewer.LoadFromFileAsync(tempFile);
+                    ShowObjectDatabaseView(parser);
                 }
                 else
                 {
-                    var listViewer = new EntryListViewControl();
-                    listViewer.OnExportRequested += (sender, entry) => ExportEntry(entry);
-                    listViewer.Dock = DockStyle.Fill;
-                    resourceViewTabPage.Controls.Add(listViewer);
+                    if (parser.IsConvertedToText)
+                    {
+                        TextViewerControl textViewer = new TextViewerControl();
+                        textViewer.Dock = DockStyle.Fill;
+                        resourceViewTabPage.Controls.Add(textViewer);
+                        saveParsedResultToolStripMenuItem.Enabled = true;
 
-                    List<EntryData>? entries = await Task.Run(() => parser.GetEntries());
-                    listViewer.ShowEntries(entries ?? new List<EntryData>());
-                    saveParsedResultToolStripMenuItem.Enabled = false;
+                        string tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".json");
+                        using (var fs = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true))
+                        {
+                            await parser.SerializeJsonToStreamAsync(fs);
+                        }
+                        await textViewer.LoadFromFileAsync(tempFile);
+                    }
+                    else
+                    {
+                        var listViewer = new EntryListViewControl();
+                        listViewer.OnExportRequested += (sender, entry) => ExportEntry(entry);
+                        listViewer.OnExtractAllData += (sender, data) => ExtractAllData(data);
+                        listViewer.Dock = DockStyle.Fill;
+                        resourceViewTabPage.Controls.Add(listViewer);
+
+                        List<EntryData>? entries = await Task.Run(() => parser.GetEntries());
+                        listViewer.ShowEntries(entries ?? new List<EntryData>());
+                        saveParsedResultToolStripMenuItem.Enabled = false;
+                    }
                 }
-
                 propertyResGrid.SelectedObject = parser.RawModel;
             }
             catch (Exception ex)
@@ -139,6 +144,103 @@ namespace RDBExplorer.Forms
             }
         }
 
+        private async void ExtractAllData(List<EntryData> entryDatas)
+        {
+            if (entryDatas == null)
+            {
+                return;
+            }
+            using var fbd = new FolderBrowserDialog();
+            if (fbd.ShowDialog() != DialogResult.OK)
+            {
+                return;
+            }
+            string outputDir = fbd.SelectedPath;
+            this.Cursor = Cursors.WaitCursor;
+            try
+            {
+                await Task.Run(() =>
+                {
+                    foreach (EntryData entryData in entryDatas)
+                    {
+                        
+                        byte[]? data = entryData.Data;
+
+                        if (data != null)
+                        {
+                            string fullPath = Path.Combine(outputDir, entryData.Name);
+                            string? directory = Path.GetDirectoryName(fullPath);
+                            if (!string.IsNullOrEmpty(directory))
+                            {
+                                Directory.CreateDirectory(directory);
+                            }
+
+                            File.WriteAllBytes(fullPath, data);
+                        }
+                    }
+                });
+
+                MessageBox.Show($"Successfully extracted {entryDatas.Count} files.", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
+            }
+        }
+
+        private async void ShowObjectDatabaseView(IResourceParser parser)
+        {
+            resourceViewTabPage.Controls.Clear();
+            SplitContainer splitContainer = new SplitContainer();
+            splitContainer.Dock = DockStyle.Fill;
+            splitContainer.Orientation = Orientation.Vertical;
+            splitContainer.Panel2Collapsed = true;
+
+            resourceViewTabPage.Controls.Add(splitContainer);
+            TextViewerControl textViewer = new TextViewerControl();
+            textViewer.Dock = DockStyle.Fill;
+            splitContainer.Panel1.Controls.Add(textViewer);
+            DepedencyListControl depedencyListControl = new DepedencyListControl();
+            depedencyListControl.Dock = DockStyle.Fill;
+            splitContainer.Panel2.Controls.Add(depedencyListControl);
+            depedencyListControl.OnDependencyStatusChanged += (s, hasData) =>
+            {
+                splitContainer.Panel2Collapsed = !hasData;
+
+                if (hasData)
+                {
+                    this.BeginInvoke(new Action(() =>
+                    {
+                        if (!splitContainer.IsDisposed)
+                            splitContainer.SplitterDistance = (int)(splitContainer.Width * 0.65);
+                    }));
+                }
+            };
+
+            saveParsedResultToolStripMenuItem.Enabled = true;
+            string tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".json");
+            try
+            {
+                using (var fs = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true))
+                {
+                    await parser.SerializeJsonToStreamAsync(fs);
+                }
+                await textViewer.LoadFromFileAsync(tempFile);
+
+                if (parser.RawModel is KidsOdbObjectFile odbObjectFile)
+                {
+                    depedencyListControl.BuildDepedencyList(odbObjectFile, _exploler);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading database view: {ex.Message}");
+            }
+        }
 
         private async void saveAsRawToolStripMenuItem_Click(object sender, EventArgs e)
         {

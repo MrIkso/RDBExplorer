@@ -57,7 +57,7 @@ namespace RDBExplorer.Forms
             menuStrip1.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
-            menuStrip1.Size = new Size(812, 28);
+            menuStrip1.Size = new Size(882, 28);
             menuStrip1.TabIndex = 0;
             menuStrip1.Text = "menuStrip1";
             // 
@@ -98,7 +98,7 @@ namespace RDBExplorer.Forms
             tabControl.Location = new Point(0, 28);
             tabControl.Name = "tabControl";
             tabControl.SelectedIndex = 0;
-            tabControl.Size = new Size(812, 415);
+            tabControl.Size = new Size(882, 525);
             tabControl.TabIndex = 1;
             tabControl.SelectedIndexChanged += TabControl_SelectedIndexChanged;
             // 
@@ -109,7 +109,7 @@ namespace RDBExplorer.Forms
             resourceRawViewTabPage.Location = new Point(4, 29);
             resourceRawViewTabPage.Name = "resourceRawViewTabPage";
             resourceRawViewTabPage.Padding = new Padding(3);
-            resourceRawViewTabPage.Size = new Size(804, 382);
+            resourceRawViewTabPage.Size = new Size(874, 492);
             resourceRawViewTabPage.TabIndex = 0;
             resourceRawViewTabPage.Text = "Raw Hex";
             resourceRawViewTabPage.UseVisualStyleBackColor = true;
@@ -120,14 +120,12 @@ namespace RDBExplorer.Forms
             hexBox.ColumnInfoVisible = true;
             hexBox.Dock = DockStyle.Fill;
             hexBox.Font = new Font("Consolas", 10F);
-            hexBox.GroupSeparatorVisible = true;
-            hexBox.GroupSize = 8;
             hexBox.LineInfoVisible = true;
             hexBox.Location = new Point(3, 3);
             hexBox.Margin = new Padding(4);
             hexBox.Name = "hexBox";
             hexBox.ShadowSelectionColor = Color.FromArgb(100, 60, 188, 255);
-            hexBox.Size = new Size(798, 354);
+            hexBox.Size = new Size(868, 464);
             hexBox.StringViewVisible = true;
             hexBox.TabIndex = 1;
             hexBox.UseFixedBytesPerLine = true;
@@ -140,10 +138,10 @@ namespace RDBExplorer.Forms
             // 
             statusStrip.ImageScalingSize = new Size(20, 20);
             statusStrip.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel, fileSizeToolStripStatusLabel });
-            statusStrip.Location = new Point(3, 357);
+            statusStrip.Location = new Point(3, 467);
             statusStrip.Name = "statusStrip";
             statusStrip.RenderMode = ToolStripRenderMode.ManagerRenderMode;
-            statusStrip.Size = new Size(798, 22);
+            statusStrip.Size = new Size(868, 22);
             statusStrip.SizingGrip = false;
             statusStrip.TabIndex = 0;
             statusStrip.Text = "statusStrip";
@@ -192,7 +190,7 @@ namespace RDBExplorer.Forms
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(812, 443);
+            ClientSize = new Size(882, 553);
             Controls.Add(tabControl);
             Controls.Add(menuStrip1);
             MainMenuStrip = menuStrip1;

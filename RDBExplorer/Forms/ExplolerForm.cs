@@ -2,6 +2,7 @@
 using RDBExplorer.Core.Formats.LangFile;
 using RDBExplorer.Core.Formats.LayeredFile;
 using RDBExplorer.Core.Models;
+using RDBExplorer.Services;
 using RDBExplorer.Utils;
 using System.Collections.Concurrent;
 using System.Text;
@@ -20,8 +21,7 @@ namespace RDBExplorer.Forms
         private CancellationTokenSource _filterCts;
         private HashSet<long> _modifiedKtids = new();
         private string _version = "1.0.1";
-        StringBuilder stringBuilder = new StringBuilder();
-
+        
         public ExplolerForm()
         {
             InitializeComponent();
@@ -123,7 +123,7 @@ namespace RDBExplorer.Forms
                     1 => string.Compare(x.TypeName, y.TypeName),
                     2 => x.FileSize.CompareTo(y.FileSize),
                     3 => string.Compare(x.Location.ContainerPath, y.Location.ContainerPath),
-                    4 => string.Compare(x.Name, y.Name),
+                    4 => x.FileKtid.CompareTo(y.FileKtid),
                     _ => 0
                 };
                 return (_sortOrder == SortOrder.Ascending) ? result : -result;
@@ -387,7 +387,6 @@ namespace RDBExplorer.Forms
 
             await Task.Run(() =>
             {
-
                 foreach (var entry in _archiveExploler.RDBEntries)
                 {
                     current++;
@@ -430,12 +429,25 @@ namespace RDBExplorer.Forms
                     }
                 }
 
-                string savePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "grabbed_names.csv");
+                string savePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "grabbed_props.csv");
                 nameGrabber.SaveToFile(savePath);
             });
 
             MessageBox.Show($"Done! Grabbed {nameGrabber.GrabbedNames.Count} names.\nSaved to: grabbed_names.csv",
                             "Name Grabber", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+
+        private void SaveDictionary(Dictionary<uint, string> dictionary, string path)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (KeyValuePair<uint, string> kv in dictionary)
+            {
+                sb.Append($"0x{kv.Key:X8}, {kv.Value}");
+                sb.AppendLine();
+            }
+
+            File.WriteAllText(path, sb.ToString());
         }
 
         private async void grabNamesToolStripMenuItem_Click(object sender, EventArgs e)
@@ -643,51 +655,15 @@ namespace RDBExplorer.Forms
             }
 
             var item = _filteredDisplayList[selectedIndex];
-            if (item == null || _archiveExploler == null)
-            {
-                return;
-            }
-
-            KTFileType fileType = (KTFileType)(item.TypeInfoKtid);
-
-            try
-            {
-                this.Cursor = Cursors.WaitCursor;
-                byte[]? entryData = await Task.Run(() => _archiveExploler.GetEntryData(item));
-
-                if (entryData == null)
-                {
-                    MessageBox.Show("Failed to load entry data.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-
-                switch (fileType)
-                {
-                    case KTFileType.TexContext:
-                    case KTFileType.StreamingTexContext:
-                        var g1ToolForm = new G1ToolForm(item.Name, entryData);
-                        g1ToolForm.Show();
-                        break;
-                    default:
-                        AssetViewForm assetViewForm = new AssetViewForm(item, entryData);
-                        assetViewForm.Show();
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error reading entry: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            finally
-            {
-                this.Cursor = Cursors.Default;
-            }
+            await AssetLauncher.OpenEntry(item, _archiveExploler);
         }
 
         private void PopulateTypeFilter()
         {
             if (_archiveExploler?.RDBEntries == null)
+            {
                 return;
+            }
             typeFilterComboBox.Text = "Filter by Type";
             var uniqueTypes = _archiveExploler.RDBEntries.Select(e => e.TypeName ?? "Unknown").Distinct().OrderBy(t => t).ToArray();
 
