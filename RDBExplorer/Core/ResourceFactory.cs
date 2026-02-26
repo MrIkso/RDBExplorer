@@ -20,6 +20,7 @@ namespace RDBExplorer.Core
                 KTFileType.StaticScreenLayoutTexInfoFile => new TextInfoWrapper(),
                 KTFileType.TexStageTableBinaryFile => new KTSWrapper(),
                 KTFileType.MaterialGroupBindTableBinaryFile => new MTLWrapper(),
+                KTFileType.LandscapeQuadtree => new LSQTREEWrapper(),
                 _ => null /*throw new NotSupportedException($"This file type: {type} not supported!")*/
             };
         }
