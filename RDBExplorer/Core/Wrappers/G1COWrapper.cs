@@ -1,9 +1,4 @@
 ﻿using RDBExplorer.Core.Formats.G1CO;
-using RDBExplorer.Core.Formats.G1MX;
-using RDBExplorer.Utils.JsonConverters;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 

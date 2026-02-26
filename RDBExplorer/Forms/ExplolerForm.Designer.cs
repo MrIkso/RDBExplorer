@@ -50,6 +50,8 @@
             progressBarOperation = new ProgressBar();
             typeFilterComboBox = new RDBExplorer.Controls.CheckedComboBox.CheckedComboBox();
             filterBox = new TextBox();
+            settingsToolStripMenuItem = new ToolStripMenuItem();
+            exportWitchNameToolStripMenuItem = new ToolStripMenuItem();
             menuStrip1.SuspendLayout();
             tableLayoutPanel1.SuspendLayout();
             SuspendLayout();
@@ -57,7 +59,7 @@
             // menuStrip1
             // 
             menuStrip1.ImageScalingSize = new Size(20, 20);
-            menuStrip1.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, toolsToolStripMenuItem, localeToolStripMenuItem, aboutToolStripMenuItem });
+            menuStrip1.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, toolsToolStripMenuItem, localeToolStripMenuItem, settingsToolStripMenuItem, aboutToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
             menuStrip1.Size = new Size(882, 28);
@@ -245,6 +247,20 @@
             filterBox.TabIndex = 7;
             filterBox.TextChanged += toolStripTextBox1_TextChanged;
             // 
+            // settingsToolStripMenuItem
+            // 
+            settingsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { exportWitchNameToolStripMenuItem });
+            settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
+            settingsToolStripMenuItem.Size = new Size(76, 24);
+            settingsToolStripMenuItem.Text = "Settings";
+            // 
+            // exportWitchToolStripMenuItem
+            // 
+            exportWitchNameToolStripMenuItem.Name = "exportWitchToolStripMenuItem";
+            exportWitchNameToolStripMenuItem.Size = new Size(224, 26);
+            exportWitchNameToolStripMenuItem.Text = "Export With Name";
+            exportWitchNameToolStripMenuItem.Click += exportWitchToolStripMenuItem_Click;
+            // 
             // ExplolerForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
@@ -290,5 +306,7 @@
         private ToolStripMenuItem aboutToolStripMenuItem;
         private ToolStripMenuItem infoToolStripMenuItem;
         private TextBox filterBox;
+        private ToolStripMenuItem settingsToolStripMenuItem;
+        private ToolStripMenuItem exportWitchNameToolStripMenuItem;
     }
 }

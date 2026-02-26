@@ -21,7 +21,7 @@ namespace RDBExplorer.Forms
         private CancellationTokenSource _filterCts;
         private HashSet<long> _modifiedKtids = new();
         private string _version = "1.0.1";
-        
+
         public ExplolerForm()
         {
             InitializeComponent();
@@ -52,6 +52,9 @@ namespace RDBExplorer.Forms
 
             var extractItem = new ToolStripMenuItem("Extract Selected");
             extractItem.Click += async (s, e) => await ExtractSelectedFiles();
+            var renameItem = new ToolStripMenuItem("Rename File");
+            renameItem.Click += (s, e) => RenameSelectedFile();
+
             var copyNameItem = new ToolStripMenuItem("Copy Name");
             copyNameItem.Click += (s, e) => CopySelectedSubItemsToClipboard(0);
 
@@ -67,6 +70,8 @@ namespace RDBExplorer.Forms
             injectData.Click += async (s, e) => await UpdateEntryData();
 
             _contextMenu.Items.Add(extractItem);
+            _contextMenu.Items.Add(new ToolStripSeparator());
+            _contextMenu.Items.Add(renameItem);
             _contextMenu.Items.Add(new ToolStripSeparator());
             _contextMenu.Items.Add(copyNameItem);
             _contextMenu.Items.Add(copyTypeItem);
@@ -332,7 +337,7 @@ namespace RDBExplorer.Forms
                 {
                     try
                     {
-                        var result = _archiveExploler.Extract(entry, outputDir);
+                        var result = _archiveExploler.Extract(entry, outputDir, exportWitchNameToolStripMenuItem.Checked);
                         if (!result.IsSuccessed)
                         {
                             errors.Add($"[{entry.FileKtid:X8}] {result.ErrorMessage}");
@@ -429,14 +434,13 @@ namespace RDBExplorer.Forms
                     }
                 }
 
-                string savePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "grabbed_props.csv");
+                string savePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "grabbed_names.csv");
                 nameGrabber.SaveToFile(savePath);
             });
 
             MessageBox.Show($"Done! Grabbed {nameGrabber.GrabbedNames.Count} names.\nSaved to: grabbed_names.csv",
                             "Name Grabber", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
-
 
         private void SaveDictionary(Dictionary<uint, string> dictionary, string path)
         {
@@ -633,6 +637,7 @@ namespace RDBExplorer.Forms
         private void ExplolerForm_Load(object sender, EventArgs e)
         {
             SetTitle();
+            exportWitchNameToolStripMenuItem.Checked = SettingsService.Instance.Config.ExportWithNames;
         }
 
         private void g1TTexureToolToolStripMenuItem_Click(object sender, EventArgs e)
@@ -674,7 +679,6 @@ namespace RDBExplorer.Forms
                 {
                     typeFilterComboBox.Items.Add(type);
                 }
-                typeFilterComboBox.DisplayMember = "Name";
             }));
         }
 
@@ -715,6 +719,40 @@ namespace RDBExplorer.Forms
         private void infoToolStripMenuItem_Click(object sender, EventArgs e)
         {
             MessageBox.Show($"RDB Explorer - by MrIkso\n\nVersion {_version}");
+        }
+
+        private void RenameSelectedFile()
+        {
+            if (archiveList.SelectedIndices.Count == 0)
+            {
+                return;
+            }
+
+            int index = archiveList.SelectedIndices[0];
+            var entry = _filteredDisplayList[index];
+
+            string newName = Microsoft.VisualBasic.Interaction.InputBox(
+                "Enter new name for this file:",
+                "Rename File",
+                entry.Name);
+
+            if (!string.IsNullOrEmpty(newName) && newName != entry.Name)
+            {
+                TypeIDHelper.Instance.UpdateName(entry.FileKtid, newName);
+                foreach (var item in _archiveExploler.RDBEntries.Where(e => e.FileKtid == entry.FileKtid))
+                {
+                    item.Name = newName;
+                }
+                archiveList.Invalidate();
+            }
+        }
+
+        private void exportWitchToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            bool newState = !exportWitchNameToolStripMenuItem.Checked;
+            exportWitchNameToolStripMenuItem.Checked = newState;
+            SettingsService.Instance.Config.ExportWithNames = newState;
+            SettingsService.Instance.Save();
         }
     }
 }

@@ -63,7 +63,12 @@ namespace RDBExplorer.Core.Models
         public byte[] UnkContent { get; set; }
         public long EntryOffsetInRDB { get; set; }
         public EntryLocation Location { get; set; } = new();
-        public string Name => TypeIDHelper.Instance.GetFileName(FileKtid, TypeInfoKtid);
+        private string _name;
+        public string Name
+        {
+            get => _name ?? TypeIDHelper.Instance.GetFileName(FileKtid, TypeInfoKtid);
+            set => _name = value;
+        }
         public string TypeName => TypeIDHelper.GetTypeName(TypeInfoKtid);
     }
 }

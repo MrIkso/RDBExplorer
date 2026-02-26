@@ -172,7 +172,7 @@ namespace RDBExplorer.Core
             return kRDIEntry;
         }
 
-        public WorkerStatus Extract(RDBEntry entry, string outputFolder)
+        public WorkerStatus Extract(RDBEntry entry, string outputFolder, bool withName)
         {
             try
             {
@@ -183,7 +183,15 @@ namespace RDBExplorer.Core
                     return new WorkerStatus(false, "Failed to get entry data");
                 }
 
-                string fileName = entry.Name ?? $"{entry.FileKtid:X8}{entry.TypeName}";
+                string fileName = string.Empty;
+                if (withName)
+                {
+                    fileName = entry.Name ?? $"0x{entry.FileKtid:X8}{TypeIDHelper.GetExtension(entry.TypeInfoKtid)}";
+                }
+                else
+                {
+                    fileName = $"0x{entry.FileKtid:X8}{TypeIDHelper.GetExtension(entry.TypeInfoKtid)}";
+                }
                 string outPath = Path.Combine(outputFolder, fileName);
                 string directory = Path.GetDirectoryName(outPath);
 

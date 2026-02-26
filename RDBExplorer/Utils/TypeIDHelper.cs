@@ -54,6 +54,25 @@ namespace RDBExplorer.Utils
             }
         }
 
+        public void UpdateName(uint ktid, string newName, string csvPath = "rdb_names.csv")
+        {
+            _knownNames[ktid] = newName;
+            SaveNamesToCsv(csvPath);
+        }
+
+        public void SaveNamesToCsv(string path)
+        {
+            try
+            {
+                var lines = _knownNames.Select(kv => $"0x{kv.Key:X8},{kv.Value}");
+                File.WriteAllLines(path, lines);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error saving dictionary: {ex.Message}");
+            }
+        }
+
         public string GetFileName(uint fileKtid, uint typeInfoKtid)
         {
             if (_knownNames.TryGetValue(fileKtid, out string name))
