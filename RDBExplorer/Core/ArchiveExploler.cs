@@ -1,6 +1,7 @@
 ﻿using RDBExplorer.Core.Formats;
 using RDBExplorer.Core.Formats.ObjectDatabaseFile;
 using RDBExplorer.Core.Models;
+using RDBExplorer.Services;
 using RDBExplorer.Utils;
 using System.Text;
 
@@ -343,6 +344,21 @@ namespace RDBExplorer.Core
                 return entry;
             }
             return null;
+        }
+
+        public static string MakeName(RDBEntry entry)
+        {
+            bool withName = SettingsService.Instance.Config.ExportWithNames;
+            string fileName = string.Empty;
+            if (withName)
+            {
+                fileName = entry.Name ?? $"0x{entry.FileKtid:X8}{TypeIDHelper.GetExtension(entry.TypeInfoKtid)}";
+            }
+            else
+            {
+                fileName = $"0x{entry.FileKtid:X8}{TypeIDHelper.GetExtension(entry.TypeInfoKtid)}";
+            }
+            return fileName;
         }
     }
 }

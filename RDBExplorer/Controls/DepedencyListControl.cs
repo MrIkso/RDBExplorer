@@ -185,6 +185,7 @@ namespace RDBExplorer.Controls
                 return;
             }
             extractAllDataBtn.Enabled = false;
+            bool withName = SettingsService.Instance.Config.ExportWithNames;
             this.Cursor = Cursors.WaitCursor;
             try
             {
@@ -193,19 +194,7 @@ namespace RDBExplorer.Controls
                     for (int i = 0; i < total; i++)
                     {
                         var entry = _fullDepedencyList[i];
-                        byte[]? data = _archiveExplorer.GetEntryData(entry);
-
-                        if (data != null)
-                        {
-                            string fullPath = Path.Combine(outputDir, entry.Name);
-                            string? directory = Path.GetDirectoryName(fullPath);
-                            if (!string.IsNullOrEmpty(directory))
-                            {
-                                Directory.CreateDirectory(directory);
-                            }
-
-                            File.WriteAllBytes(fullPath, data);
-                        }
+                        _archiveExplorer.Extract(entry, outputDir, withName);
                         int current = i + 1;
                         this.Invoke(new Action(() =>
                         {

@@ -1,8 +1,10 @@
 ﻿using Be.Windows.Forms;
 using RDBExplorer.Controls;
 using RDBExplorer.Core;
+using RDBExplorer.Core.Formats.G1CO;
 using RDBExplorer.Core.Formats.ObjectDatabaseFile;
 using RDBExplorer.Core.Models;
+using RDBExplorer.Services;
 using RDBExplorer.Utils;
 
 namespace RDBExplorer.Forms
@@ -246,7 +248,7 @@ namespace RDBExplorer.Forms
         {
             using (SaveFileDialog sfd = new SaveFileDialog())
             {
-                sfd.FileName = Path.GetFileName(_currentFileName);
+                sfd.FileName = Path.GetFileName(ArchiveExploler.MakeName(_entry));
                 sfd.Filter = "All files (*.*)|*.*";
 
                 if (sfd.ShowDialog() == DialogResult.OK)
@@ -264,6 +266,8 @@ namespace RDBExplorer.Forms
             }
         }
 
+        
+
         private async void saveParsedResultToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (CurrentParser == null || !CurrentParser.IsConvertedToText)
@@ -271,7 +275,8 @@ namespace RDBExplorer.Forms
 
             using (SaveFileDialog sfd = new SaveFileDialog())
             {
-                sfd.FileName = Path.ChangeExtension(_currentFileName, ".json");
+                string name = Path.GetFileName(ArchiveExploler.MakeName(_entry));
+                sfd.FileName = Path.ChangeExtension(name, ".json");
                 sfd.Filter = "JSON file (*.json)|*.json|All files (*.*)|*.*";
 
                 if (sfd.ShowDialog() == DialogResult.OK)

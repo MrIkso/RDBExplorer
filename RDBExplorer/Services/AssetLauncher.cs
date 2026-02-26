@@ -50,14 +50,14 @@ namespace RDBExplorer.Services
                 {
                     case KTFileType.TexContext:
                     case KTFileType.StreamingTexContext:
-                        newForm = new G1ToolForm(item.Name, entryData);
+                        newForm = new G1ToolForm(item.Name, entryData, item);
                         break;
                     case KTFileType.BinaryFile:
                         // a some binary file should be a texture, need check it
                         string extention = FileTypeDetector.DetectExtension(entryData);
                         if (extention.StartsWith(".g1t"))
                         {
-                            newForm = new G1ToolForm(item.Name, entryData);
+                            newForm = new G1ToolForm(item.Name, entryData, item);
                         }
                         else
                         {

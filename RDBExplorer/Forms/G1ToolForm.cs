@@ -1,4 +1,6 @@
-﻿using RDBExplorer.Core.Formats.G1T;
+﻿using RDBExplorer.Core;
+using RDBExplorer.Core.Formats.G1T;
+using RDBExplorer.Core.Models;
 using RDBExplorer.Utils;
 
 namespace RDBExplorer.Forms
@@ -9,6 +11,7 @@ namespace RDBExplorer.Forms
         private G1TTexture _selectedTexture;
         private string _currentFilePath;
         private bool _isModified;
+        private RDBEntry _rdbEntry;
 
         public G1ToolForm()
         {
@@ -16,10 +19,11 @@ namespace RDBExplorer.Forms
             SetupEvents();
         }
 
-        public G1ToolForm(string fileName, byte[] data) : this()
+        public G1ToolForm(string fileName, byte[] data, RDBEntry entry) : this()
         {
             _currentFilePath = fileName;
             this.Text = $"G1Tool - {fileName}";
+            _rdbEntry = entry;
             _ = LoadWithDataAsync(data);
         }
 
@@ -407,7 +411,7 @@ namespace RDBExplorer.Forms
             using (var sfd = new SaveFileDialog
             {
                 Filter = "G1T Texture Archive|*.g1t",
-                FileName = Path.GetFileName(_currentFilePath)
+                FileName = Path.GetFileName(ArchiveExploler.MakeName(_rdbEntry))
             })
             {
                 if (sfd.ShowDialog() == DialogResult.OK)
