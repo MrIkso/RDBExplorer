@@ -49,6 +49,7 @@ namespace RDBExplorer.Utils
         private static readonly List<Signature> Signatures = new List<Signature>
         {
             new Signature("? 50 4E 47", ".png"),
+            new Signature("? 32 30 31 31 2D 30 34 2D 32 39 54 31 34 3A 32 36 3A 34 38 2B 30 39 30 30", ".bytecode"),
             AddAsciiSignature("DXBC", ".dxbc"),
             AddAsciiSignature("_A1G", ".g1a"),
             AddAsciiSignature("OC1G", ".g1co"),
@@ -78,7 +79,7 @@ namespace RDBExplorer.Utils
             AddAsciiSignature("CGRS", ".srgc"),
             AddAsciiSignature("ASRS", ".srsa"),
             AddAsciiSignature("TSRS", ".srst"),
-   
+
             AddAsciiSignature("G2A_PACK", ".g2apack"),
             AddAsciiSignature("TMG_PACK", ".tmgpack"),
             AddAsciiSignature("TRMD", ".dmrt"),
@@ -90,7 +91,7 @@ namespace RDBExplorer.Utils
             if (data == null || data.Length < 4)
                 return ".dat";
 
-            ReadOnlySpan<byte> header = data.Length > 16 ? data.AsSpan(0, 16) : data.AsSpan();
+            ReadOnlySpan<byte> header = data.Length > 16 ? data.AsSpan(0, 32) : data.AsSpan();
 
             foreach (var sig in Signatures)
             {
