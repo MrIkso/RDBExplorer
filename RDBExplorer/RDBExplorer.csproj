@@ -31,4 +31,8 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Core\Formats\KSCL\" />
+  </ItemGroup>
+
 </Project>

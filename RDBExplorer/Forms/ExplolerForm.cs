@@ -1,4 +1,5 @@
 ﻿using RDBExplorer.Core;
+using RDBExplorer.Core.Formats.Bytecode;
 using RDBExplorer.Core.Formats.LangFile;
 using RDBExplorer.Core.Formats.LayeredFile;
 using RDBExplorer.Core.Models;
@@ -753,6 +754,11 @@ namespace RDBExplorer.Forms
             exportWitchNameToolStripMenuItem.Checked = newState;
             SettingsService.Instance.Config.ExportWithNames = newState;
             SettingsService.Instance.Save();
+        }
+
+        private void scriptViewerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            new ScriptViewerForm().Show();
         }
     }
 }

@@ -42,6 +42,8 @@
             localeToolStripMenuItem = new ToolStripMenuItem();
             unpackLocalesToolStripMenuItem = new ToolStripMenuItem();
             packLocalesToolStripMenuItem = new ToolStripMenuItem();
+            settingsToolStripMenuItem = new ToolStripMenuItem();
+            exportWitchNameToolStripMenuItem = new ToolStripMenuItem();
             aboutToolStripMenuItem = new ToolStripMenuItem();
             infoToolStripMenuItem = new ToolStripMenuItem();
             tableLayoutPanel1 = new TableLayoutPanel();
@@ -50,8 +52,7 @@
             progressBarOperation = new ProgressBar();
             typeFilterComboBox = new RDBExplorer.Controls.CheckedComboBox.CheckedComboBox();
             filterBox = new TextBox();
-            settingsToolStripMenuItem = new ToolStripMenuItem();
-            exportWitchNameToolStripMenuItem = new ToolStripMenuItem();
+            scriptViewerToolStripMenuItem = new ToolStripMenuItem();
             menuStrip1.SuspendLayout();
             tableLayoutPanel1.SuspendLayout();
             SuspendLayout();
@@ -88,7 +89,7 @@
             // 
             // toolsToolStripMenuItem
             // 
-            toolsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { extractAllToolStripMenuItem, grabNamesToolStripMenuItem, grabAllMagicHeadersToolStripMenuItem, upackBinArchiveToolStripMenuItem, packBinArchiveToolStripMenuItem, g1TTexureToolToolStripMenuItem });
+            toolsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { extractAllToolStripMenuItem, grabNamesToolStripMenuItem, grabAllMagicHeadersToolStripMenuItem, upackBinArchiveToolStripMenuItem, packBinArchiveToolStripMenuItem, g1TTexureToolToolStripMenuItem, scriptViewerToolStripMenuItem });
             toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             toolsToolStripMenuItem.Size = new Size(58, 24);
             toolsToolStripMenuItem.Text = "Tools";
@@ -158,6 +159,20 @@
             packLocalesToolStripMenuItem.Size = new Size(194, 26);
             packLocalesToolStripMenuItem.Text = "Pack Locales";
             packLocalesToolStripMenuItem.Click += packLocalesToolStripMenuItem_Click;
+            // 
+            // settingsToolStripMenuItem
+            // 
+            settingsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { exportWitchNameToolStripMenuItem });
+            settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
+            settingsToolStripMenuItem.Size = new Size(76, 24);
+            settingsToolStripMenuItem.Text = "Settings";
+            // 
+            // exportWitchNameToolStripMenuItem
+            // 
+            exportWitchNameToolStripMenuItem.Name = "exportWitchNameToolStripMenuItem";
+            exportWitchNameToolStripMenuItem.Size = new Size(214, 26);
+            exportWitchNameToolStripMenuItem.Text = "Export With Name";
+            exportWitchNameToolStripMenuItem.Click += exportWitchToolStripMenuItem_Click;
             // 
             // aboutToolStripMenuItem
             // 
@@ -247,19 +262,12 @@
             filterBox.TabIndex = 7;
             filterBox.TextChanged += toolStripTextBox1_TextChanged;
             // 
-            // settingsToolStripMenuItem
+            // scriptViewerToolStripMenuItem
             // 
-            settingsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { exportWitchNameToolStripMenuItem });
-            settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
-            settingsToolStripMenuItem.Size = new Size(76, 24);
-            settingsToolStripMenuItem.Text = "Settings";
-            // 
-            // exportWitchToolStripMenuItem
-            // 
-            exportWitchNameToolStripMenuItem.Name = "exportWitchToolStripMenuItem";
-            exportWitchNameToolStripMenuItem.Size = new Size(224, 26);
-            exportWitchNameToolStripMenuItem.Text = "Export With Name";
-            exportWitchNameToolStripMenuItem.Click += exportWitchToolStripMenuItem_Click;
+            scriptViewerToolStripMenuItem.Name = "scriptViewerToolStripMenuItem";
+            scriptViewerToolStripMenuItem.Size = new Size(250, 26);
+            scriptViewerToolStripMenuItem.Text = "Script Viewer";
+            scriptViewerToolStripMenuItem.Click += scriptViewerToolStripMenuItem_Click;
             // 
             // ExplolerForm
             // 
@@ -308,5 +316,6 @@
         private TextBox filterBox;
         private ToolStripMenuItem settingsToolStripMenuItem;
         private ToolStripMenuItem exportWitchNameToolStripMenuItem;
+        private ToolStripMenuItem scriptViewerToolStripMenuItem;
     }
 }

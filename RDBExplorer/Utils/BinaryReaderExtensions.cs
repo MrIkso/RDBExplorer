@@ -43,5 +43,12 @@ namespace RDBExplorer.Utils
                 handle.Free();
             }
         }
+
+        public static void Align(this BinaryReader br, int size)
+        {
+            long currentPosition = br.BaseStream.Position;
+            long alignedPosition = AlignmentHelper.Align(currentPosition, size);
+            br.BaseStream.Position = alignedPosition;
+        }
     }
 }
