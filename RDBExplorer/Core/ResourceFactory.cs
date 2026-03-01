@@ -23,6 +23,7 @@ namespace RDBExplorer.Core
                 KTFileType.LandscapeQuadtree => new LSQTREEWrapper(),
                 KTFileType.ShaderBindTableBinaryFile => new SidWrapper(),
                 KTFileType.RBFData => new GRBFWrapper(),
+                KTFileType.SwingData => new SWGWrapper(),
                 _ => null /*throw new NotSupportedException($"This file type: {type} not supported!")*/
             };
         }
