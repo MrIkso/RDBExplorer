@@ -215,7 +215,7 @@ namespace RDBExplorer.Forms
         {
             using (var openFileDialog = new OpenFileDialog())
             {
-                openFileDialog.Filter = "KT Textures|*.g1t";
+                openFileDialog.Filter = "KT Textures|*.g1t;*.g1ts";
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     _currentFilePath = openFileDialog.FileName;

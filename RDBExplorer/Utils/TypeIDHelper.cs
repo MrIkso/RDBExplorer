@@ -88,7 +88,7 @@ namespace RDBExplorer.Utils
             {
                 // common files
                 0xAFBEC60C => new("TexContext", ".g1t"),
-                0xAD57EBBA => new("StreamingTexContext", ".g1t"),
+                0xAD57EBBA => new("StreamingTexContext", ".g1ts"),
                 0x563BDEF1 => new("ModelData", ".g1m"),
                 0x786DCD84 => new("G1NFile", ".g1n"),
                 0x17614AF5 => new("G1MXFile", ".g1mx"),
