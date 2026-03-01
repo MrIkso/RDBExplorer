@@ -91,8 +91,19 @@ namespace RDBExplorer.Utils
             if (data == null || data.Length < 4)
                 return ".dat";
 
-            ReadOnlySpan<byte> header = data.Length > 16 ? data.AsSpan(0, 32) : data.AsSpan();
-
+            ReadOnlySpan<byte> header;
+            if (data.Length > 32)
+            {
+                header = data.AsSpan(0, 32);
+            }
+            else if (data.Length > 16)
+            {
+               header = data.AsSpan(0, 16);
+            }
+            else
+            {
+                header = data.AsSpan();
+            }
             foreach (var sig in Signatures)
             {
                 if (sig.IsMatch(header))
