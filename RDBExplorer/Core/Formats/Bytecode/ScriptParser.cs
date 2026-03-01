@@ -76,7 +76,7 @@ namespace RDBExplorer.Core.Formats.Bytecode
             for (int i = 0; i < literalCount; i++)
             {
                 ushort len = reader.ReadUInt16();
-                string lit = reader.ReadEncodedString(len);
+                string lit = reader.ReadEncodedString(len + 1, Encoding.UTF8);
                 script.Literals.Add(lit);
             }
 

@@ -1,5 +1,4 @@
 ﻿using RDBExplorer.Core;
-using RDBExplorer.Core.Formats.Bytecode;
 using RDBExplorer.Core.Formats.LangFile;
 using RDBExplorer.Core.Formats.LayeredFile;
 using RDBExplorer.Core.Models;
