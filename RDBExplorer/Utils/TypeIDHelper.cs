@@ -97,7 +97,7 @@ namespace RDBExplorer.Utils
                 0x79C724C2 => new("G1PFile", ".g1p"),
                 0x54738C76 => new("G1COFile", ".g1co"),
                 0xA8D88566 => new("G1COXFile", ".g1cox"),
-                0x7461C7CA => new("G1HFile", ".g1h"),
+                0x7461C7CA => new("G1HFile", ".g1h"), // ShapeData
                 0xDB0AE0AA => new("G1IIFile", ".gii"),
                 0xB097D41F => new("EffectData", ".g1e"),
                 0x4D0102AC => new("EffectMeshData", ".g1em"),
@@ -143,7 +143,7 @@ namespace RDBExplorer.Utils
                 0x0D34474D => new("StreamAssetDataFile", ".srst"),
                 0x133D2C3B => new("ShaderBindTableBinaryFile", ".sid"),
                 0xA027E46B => new("VideoStreamset", ".mov"),
-                0xBEF563DD => new("StreamingMeshletModelData", ".g1ms"),
+                0xBEF563DD => new("StreamingMeshletModelData", ".g1m"),
 
                 0x5B2970FC => new("KTF2File", ".ktf2"),
                 0xD7F47FB1 => new("BinaryFile", ".efpl"),
