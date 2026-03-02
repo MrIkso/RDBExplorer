@@ -65,8 +65,8 @@ namespace RDBExplorer.Utils
             //AddAsciiSignature("FP1G", ".g1pf"),      // unknown
             AddAsciiSignature("2R1G", ".rbg"),        // River2BakedGeometry
             AddAsciiSignature("GT1G", ".g1t"),        // TexContext / StreamingTexContext
-            AddAsciiSignature("_A2G", ".g1a"),        // G1AFile (було .g2a)
-            AddAsciiSignature("_S2G", ".g1s"),        // G1SFile (було .g2s)
+            AddAsciiSignature("_A2G", ".g1a"),        // G1AFile
+            AddAsciiSignature("_S2G", ".g1s"),        // G1SFile
             AddAsciiSignature("FBRG", ".grbf"),       // RBFData
             //AddAsciiSignature("_TGK", ".kgt"),        // unknown
             AddAsciiSignature("_RGK", ".kidsrender"), // RenderGraphFile
