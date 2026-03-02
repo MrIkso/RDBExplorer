@@ -125,6 +125,7 @@ namespace RDBExplorer.Utils
                 0x56EFE45C => new("PartsModelGroupBindTableBinaryFile", ".grp"),
                 0xBBF9B49D => new("GroupFile", ".grp"),
                 0x27BC54B7 => new("RigBinFile", ".rigbin"),
+                0x77CABC9 => new ("NavMapDataObject", ".g1nm"),
 
                 // scripts and coalisions
                 0x5599AA51 => new("KSCLFile", ".kscl"),
@@ -207,7 +208,6 @@ namespace RDBExplorer.Utils
                 0xA880E514 => new("PartsSet"),
                 0x0E3EFB53 => new("Sctipt"),
                 0x071D73F1 => new("PathFinderObject"),
-                0x077CABC9 => new("NavMapDataObject"),
                 0xA1A84F2C => new("MotorScreenLayoutSetting"),
                 0x63336873 => new("StaticScreenLayout"),
                 0x9C1CED03 => new("FontParameter"),

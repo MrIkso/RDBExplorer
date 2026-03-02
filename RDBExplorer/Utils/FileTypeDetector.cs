@@ -60,9 +60,9 @@ namespace RDBExplorer.Utils
             AddAsciiSignature("_H1G", ".g1h"),        // G1HFile
             AddAsciiSignature("II1G", ".gii"),        // G1IIFile
             AddAsciiSignature("_M1G", ".g1m"),        // ModelData
-            //AddAsciiSignature("MN1G", ".g1nm"),      // unknown
+            AddAsciiSignature("MN1G", ".g1nm"),       // NavMapDataObject
             AddAsciiSignature("_N1G", ".g1n"),        // G1NFile
-            //AddAsciiSignature("FP1G", ".g1pf"),      // unknown
+            AddAsciiSignature("FP1G", ".g1pf"),      // unknown
             AddAsciiSignature("2R1G", ".rbg"),        // River2BakedGeometry
             AddAsciiSignature("GT1G", ".g1t"),        // TexContext / StreamingTexContext
             AddAsciiSignature("_A2G", ".g1a"),        // G1AFile
@@ -70,7 +70,7 @@ namespace RDBExplorer.Utils
             AddAsciiSignature("FBRG", ".grbf"),       // RBFData
             //AddAsciiSignature("_TGK", ".kgt"),        // unknown
             AddAsciiSignature("_RGK", ".kidsrender"), // RenderGraphFile
-            //AddAsciiSignature("_MHK", ".khm"),        // unknown
+            AddAsciiSignature("_MHK", ".khm"),        // Collision HeightMap
             AddAsciiSignature("_DOK", ".kidsobjdb"),  // ObjectDatabaseFile
             AddAsciiSignature("LCSK", ".kscl"),       // KSCLFile
             AddAsciiSignature("GSTK", ".kts"),        // TexStageTableBinaryFile
