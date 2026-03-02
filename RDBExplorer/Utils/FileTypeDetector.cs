@@ -50,6 +50,7 @@ namespace RDBExplorer.Utils
         {
             new Signature("? 50 4E 47", ".png"),
             new Signature("? 32 30 31 31 2D 30 34 2D 32 39 54 31 34 3A 32 36 3A 34 38 2B 30 39 30 30", ".bytecode"),
+            new Signature("00 22 04 20", ".database"),
             AddAsciiSignature("DXBC", ".dxbc"),
             AddAsciiSignature("_A1G", ".g1a"),
             AddAsciiSignature("OC1G", ".g1co"),
