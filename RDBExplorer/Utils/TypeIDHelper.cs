@@ -143,7 +143,7 @@ namespace RDBExplorer.Utils
                 0x0D34474D => new("StreamAssetDataFile", ".srst"),
                 0x133D2C3B => new("ShaderBindTableBinaryFile", ".sid"),
                 0xA027E46B => new("VideoStreamset", ".mov"),
-                0xBEF563DD => new("StreamingMeshletModelData", ".g1m"),
+                0xBEF563DD => new("StreamingMeshletModelData", ".g1ms"),
 
                 0x5B2970FC => new("KTF2File", ".ktf2"),
                 0xD7F47FB1 => new("BinaryFile", ".efpl"),
