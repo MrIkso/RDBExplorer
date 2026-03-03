@@ -35,11 +35,9 @@ namespace RDBExplorer.Core
 
         public void Browse(string rdbFilePath)
         {
-            if (File.Exists(rdbFilePath))
+            if (!File.Exists(rdbFilePath))
             {
-                TypeIDHelper.Instance.LoadNamesFromCsv("rdb_names.csv");
-                KidsObjNameTypeIDHelper.Instance.Load("kidstypeinfodb.yml");
-                KidsObjNameTypeIDHelper.Instance.LoadProperties("all_properties.csv");
+                return;
             }
             _workDir = Path.GetDirectoryName(rdbFilePath);
             var rdb = new RDBReader();

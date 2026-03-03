@@ -1,11 +1,17 @@
 ﻿using RDBExplorer.Core;
+using RDBExplorer.Core.Formats.Bytecode;
+using RDBExplorer.Core.Formats.G1CO;
 using RDBExplorer.Core.Formats.LangFile;
 using RDBExplorer.Core.Formats.LayeredFile;
+using RDBExplorer.Core.Formats.ObjectDatabaseFile;
+using RDBExplorer.Core.Formats.TexInfo;
 using RDBExplorer.Core.Models;
+using RDBExplorer.Core.Wrappers;
 using RDBExplorer.Services;
 using RDBExplorer.Utils;
 using System.Collections.Concurrent;
 using System.Text;
+using System.Windows.Forms;
 using static RDBExplorer.Utils.ListViewExtentions;
 
 namespace RDBExplorer.Forms
@@ -378,6 +384,9 @@ namespace RDBExplorer.Forms
             await ExtractFiles(false);
         }
 
+        Dictionary<uint, string> names = new Dictionary<uint, string>();
+        private HashSet<string> usedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         private async Task GrabNames(bool isGrabMagic)
         {
             if (_archiveExploler?.RDBEntries == null)
@@ -408,11 +417,11 @@ namespace RDBExplorer.Forms
                     }
                     else
                     {
-                        bool isRelevant = entry.Name != null && (
-                            entry.Name.EndsWith(".g1cox") ||
-                            entry.Name.EndsWith(".g1mx") ||
-                            entry.Name.EndsWith(".g1p"));
+                        KTFileType fileType = (KTFileType)entry.TypeInfoKtid;
 
+                        bool isRelevant = fileType is KTFileType.G1COXFile
+                                                  or KTFileType.G1MXFile
+                                                  or KTFileType.G1PFile;
                         if (isRelevant)
                         {
                             byte[]? data = _archiveExploler.GetEntryData(entry);
@@ -440,6 +449,110 @@ namespace RDBExplorer.Forms
 
             MessageBox.Show($"Done! Grabbed {nameGrabber.GrabbedNames.Count} names.\nSaved to: grabbed_names.csv",
                             "Name Grabber", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void RenameByScreenLayout(RDBEntry dbEntry, byte[] objectDb)
+        {
+            List<RDBEntry> rDBEntries = new List<RDBEntry>();
+            rDBEntries.Add(dbEntry);
+            KidsObjDbParser objDbParser = new KidsObjDbParser();
+            objDbParser.Load(objectDb);
+
+            var kidsOdbObjectFile = objDbParser.KidsOdbObjectFile;
+            // load all deperencies 
+            var uniqueKtids = new HashSet<uint>();
+            foreach (var obj in kidsOdbObjectFile.Objects)
+            {
+                if (!string.IsNullOrEmpty(obj.TypeName) && obj.TypeName.Contains("StaticScreenLayoutTextures"))
+                {
+                    foreach (var col in obj.Columns)
+                    {
+                        OBJDBPropertyType propertyType = col.Type;
+                        bool hasName = !string.IsNullOrEmpty(col.PropertyName);
+                        bool shouldCheck = (hasName && col.PropertyName.Contains("Hash", StringComparison.OrdinalIgnoreCase))
+                        || (!hasName && propertyType == OBJDBPropertyType.UInt32);
+
+                        if (shouldCheck)
+                        {
+                            foreach (var val in col.Values)
+                            {
+                                if (val is uint ktid && ktid > 1000)
+                                {
+                                    uniqueKtids.Add(ktid);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // read reference and read textinfo
+
+            string baseName = string.Empty;
+            foreach (uint id in uniqueKtids)
+            {
+                RDBEntry? entry = _archiveExploler.FindEntryByKtId(id);
+                if (entry != null)
+                {
+                    rDBEntries.Add(entry);
+                    KTFileType fileType = (KTFileType)entry.TypeInfoKtid;
+                    if (fileType == KTFileType.StaticScreenLayoutTexInfoFile)
+                    {
+                        byte[]? data = _archiveExploler.GetEntryData(entry);
+                        if (data != null)
+                        {
+                            TextInfoParser textInfoParser = new TextInfoParser();
+                            textInfoParser.Load(data);
+                            var texInfoFile = textInfoParser.TexInfoFile;
+                            var textInfo = texInfoFile.Entries.First<TextInfoEntry>();
+                            string name = textInfo.TextureName;
+                            baseName = name;
+                            /* string[] parts = name.Split('_');
+                             if (parts.Length > 1)
+                             {
+                                  baseName = string.Join("_", parts.Take(parts.Length - 1));
+
+                             }*/
+                        }
+                    }
+                }
+            }
+
+            if (string.IsNullOrEmpty(baseName))
+            {
+                return;
+            }
+            foreach (RDBEntry rdb in rDBEntries)
+            {
+                string extension = TypeIDHelper.GetExtension(rdb.TypeInfoKtid);
+                string candidateName = $"{baseName}{extension}";
+
+                // Якщо такий KTID вже перейменований — пропускаємо
+                if (names.ContainsKey(rdb.FileKtid))
+                    continue;
+
+                // Логіка створення унікального імені
+                if (usedNames.Contains(candidateName))
+                {
+                    int index = 1;
+                    string newName;
+                    do
+                    {
+                        // Формат: Name_1.ext, Name_2.ext і т.д.
+                        newName = $"{baseName}_{index}{extension}";
+                        index++;
+                    }
+                    while (usedNames.Contains(newName));
+
+                    candidateName = newName;
+                }
+
+                // Додаємо в словник імен та в список використаних імен
+                if (names.TryAdd(rdb.FileKtid, candidateName))
+                {
+                    usedNames.Add(candidateName);
+                }
+            }
         }
 
         private void SaveDictionary(Dictionary<uint, string> dictionary, string path)
@@ -634,10 +747,23 @@ namespace RDBExplorer.Forms
             }));
         }
 
-        private void ExplolerForm_Load(object sender, EventArgs e)
+        private async void ExplolerForm_Load(object sender, EventArgs e)
         {
             SetTitle();
             exportWitchNameToolStripMenuItem.Checked = SettingsService.Instance.Config.ExportWithNames;
+            toolStripStatusLabel.Text = "Loading Dictionaries..";
+            await LoadDictionariesAsync();
+            toolStripStatusLabel.Text = "Done!";
+        }
+
+        private async Task LoadDictionariesAsync()
+        {
+            await Task.Run(() =>
+            {
+                TypeIDHelper.Instance.LoadNamesFromCsv("rdb_names.csv");
+                KidsObjNameTypeIDHelper.Instance.Load("kidstypeinfodb.yml");
+                KidsObjNameTypeIDHelper.Instance.LoadProperties("all_properties.csv");
+            });
         }
 
         private void g1TTexureToolToolStripMenuItem_Click(object sender, EventArgs e)

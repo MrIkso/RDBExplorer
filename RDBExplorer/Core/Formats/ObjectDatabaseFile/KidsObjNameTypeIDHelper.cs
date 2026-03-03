@@ -18,6 +18,10 @@ namespace RDBExplorer.Core.Formats.ObjectDatabaseFile
 
         public void Load(string path)
         {
+            if (!File.Exists(path)) {
+                return;
+            }
+
             string yamlContent = File.ReadAllText(path);
             var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
             var ymlData = deserializer.Deserialize<KidsObjYml>(yamlContent);
