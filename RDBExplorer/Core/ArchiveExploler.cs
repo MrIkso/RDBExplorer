@@ -117,6 +117,7 @@ namespace RDBExplorer.Core
                 // idk what it, maybe encrypted or just raw data, try read as uncompressed size
                 else if (isEncrypted)
                 {
+                    Console.WriteLine($"File: {entry.Name} is might be encrypted");
                     return reader.ReadBytes((int)kRDIEntry.Header.UncompressedSize);
                 }
 

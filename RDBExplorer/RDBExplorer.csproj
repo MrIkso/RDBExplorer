@@ -9,10 +9,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AssetRipper.TextureDecoder" Version="2.6.0" />
+    <PackageReference Include="AssetRipper.TextureDecoder" Version="2.6.1" />
     <PackageReference Include="BCnEncoder.Net" Version="2.2.1" />
     <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="FastColoredTextBox.NET10" Version="2.16.26.9180" />
+    <PackageReference Include="OpenTK.GLControl" Version="4.0.2" />
     <PackageReference Include="StbImageWriteSharp" Version="1.16.7" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
   </ItemGroup>
@@ -31,6 +32,12 @@
     </None>
     <None Update="rdb_names.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Rendering\Shaders\Generic.frag">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Rendering\Shaders\Generic.vert">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 

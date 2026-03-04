@@ -39,6 +39,7 @@
             upackBinArchiveToolStripMenuItem = new ToolStripMenuItem();
             packBinArchiveToolStripMenuItem = new ToolStripMenuItem();
             g1TTexureToolToolStripMenuItem = new ToolStripMenuItem();
+            scriptViewerToolStripMenuItem = new ToolStripMenuItem();
             localeToolStripMenuItem = new ToolStripMenuItem();
             unpackLocalesToolStripMenuItem = new ToolStripMenuItem();
             packLocalesToolStripMenuItem = new ToolStripMenuItem();
@@ -52,7 +53,7 @@
             progressBarOperation = new ProgressBar();
             typeFilterComboBox = new RDBExplorer.Controls.CheckedComboBox.CheckedComboBox();
             filterBox = new TextBox();
-            scriptViewerToolStripMenuItem = new ToolStripMenuItem();
+            modelViewerToolStripMenuItem = new ToolStripMenuItem();
             menuStrip1.SuspendLayout();
             tableLayoutPanel1.SuspendLayout();
             SuspendLayout();
@@ -89,7 +90,7 @@
             // 
             // toolsToolStripMenuItem
             // 
-            toolsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { extractAllToolStripMenuItem, grabNamesToolStripMenuItem, grabAllMagicHeadersToolStripMenuItem, upackBinArchiveToolStripMenuItem, packBinArchiveToolStripMenuItem, g1TTexureToolToolStripMenuItem, scriptViewerToolStripMenuItem });
+            toolsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { extractAllToolStripMenuItem, grabNamesToolStripMenuItem, grabAllMagicHeadersToolStripMenuItem, upackBinArchiveToolStripMenuItem, packBinArchiveToolStripMenuItem, g1TTexureToolToolStripMenuItem, scriptViewerToolStripMenuItem, modelViewerToolStripMenuItem });
             toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             toolsToolStripMenuItem.Size = new Size(58, 24);
             toolsToolStripMenuItem.Text = "Tools";
@@ -138,6 +139,13 @@
             g1TTexureToolToolStripMenuItem.Size = new Size(250, 26);
             g1TTexureToolToolStripMenuItem.Text = "G1T Texure Tool";
             g1TTexureToolToolStripMenuItem.Click += g1TTexureToolToolStripMenuItem_Click;
+            // 
+            // scriptViewerToolStripMenuItem
+            // 
+            scriptViewerToolStripMenuItem.Name = "scriptViewerToolStripMenuItem";
+            scriptViewerToolStripMenuItem.Size = new Size(250, 26);
+            scriptViewerToolStripMenuItem.Text = "Script Viewer";
+            scriptViewerToolStripMenuItem.Click += scriptViewerToolStripMenuItem_Click;
             // 
             // localeToolStripMenuItem
             // 
@@ -262,12 +270,12 @@
             filterBox.TabIndex = 7;
             filterBox.TextChanged += toolStripTextBox1_TextChanged;
             // 
-            // scriptViewerToolStripMenuItem
+            // modelViewerToolStripMenuItem
             // 
-            scriptViewerToolStripMenuItem.Name = "scriptViewerToolStripMenuItem";
-            scriptViewerToolStripMenuItem.Size = new Size(250, 26);
-            scriptViewerToolStripMenuItem.Text = "Script Viewer";
-            scriptViewerToolStripMenuItem.Click += scriptViewerToolStripMenuItem_Click;
+            modelViewerToolStripMenuItem.Name = "modelViewerToolStripMenuItem";
+            modelViewerToolStripMenuItem.Size = new Size(250, 26);
+            modelViewerToolStripMenuItem.Text = "Model Viewer";
+            modelViewerToolStripMenuItem.Click += modelViewerToolStripMenuItem_Click;
             // 
             // ExplolerForm
             // 
@@ -317,5 +325,6 @@
         private ToolStripMenuItem settingsToolStripMenuItem;
         private ToolStripMenuItem exportWitchNameToolStripMenuItem;
         private ToolStripMenuItem scriptViewerToolStripMenuItem;
+        private ToolStripMenuItem modelViewerToolStripMenuItem;
     }
 }

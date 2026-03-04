@@ -1,17 +1,13 @@
 ﻿using RDBExplorer.Core;
-using RDBExplorer.Core.Formats.Bytecode;
-using RDBExplorer.Core.Formats.G1CO;
 using RDBExplorer.Core.Formats.LangFile;
 using RDBExplorer.Core.Formats.LayeredFile;
 using RDBExplorer.Core.Formats.ObjectDatabaseFile;
 using RDBExplorer.Core.Formats.TexInfo;
 using RDBExplorer.Core.Models;
-using RDBExplorer.Core.Wrappers;
 using RDBExplorer.Services;
 using RDBExplorer.Utils;
 using System.Collections.Concurrent;
 using System.Text;
-using System.Windows.Forms;
 using static RDBExplorer.Utils.ListViewExtentions;
 
 namespace RDBExplorer.Forms
@@ -884,6 +880,11 @@ namespace RDBExplorer.Forms
         private void scriptViewerToolStripMenuItem_Click(object sender, EventArgs e)
         {
             new ScriptViewerForm().Show();
+        }
+
+        private void modelViewerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            new ModelViewForm().Show();
         }
     }
 }

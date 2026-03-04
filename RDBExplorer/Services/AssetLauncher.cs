@@ -64,6 +64,17 @@ namespace RDBExplorer.Services
                             newForm = new AssetViewForm(item, entryData, explorer);
                         }
                         break;
+                    case KTFileType.ModelData:
+                        string modelExtention = FileTypeDetector.DetectExtension(entryData);
+                        if (modelExtention.StartsWith(".g1m"))
+                        {
+                            newForm = new ModelViewForm(item, entryData);
+                        }
+                        else
+                        {
+                            newForm = new AssetViewForm(item, entryData, explorer);
+                        }
+                        break;
                     default:
                         newForm = new AssetViewForm(item, entryData, explorer);
                         break;
