@@ -30,7 +30,7 @@ void main()
 		if(weight[i] > 0)
 			bindPos += (bones[int(bone[i])] * vec4(pos, 1)).xyz * weight[i];
 		else
-			break;
+			continue;
 
 	if(bindPos == vec3(0))
 		bindPos = pos;

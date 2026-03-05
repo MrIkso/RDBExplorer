@@ -1,4 +1,5 @@
 ﻿using OpenTK.Mathematics;
+using RDBExplorer.Core.Formats.G1M;
 using RDBExplorer.Utils;
 
 namespace RDBExplorer.Core.Formats.G1M
@@ -15,6 +16,9 @@ namespace RDBExplorer.Core.Formats.G1M
         public List<List<uint>> ResolvedPalettes = new List<List<uint>>();
         public List<G1MMaterialInternal> Materials = new();
         public List<G1MMeshGroupInternal> MeshGroups = new();
+        public List<List<uint>> PhysicsPalettes = new List<List<uint>>();
+        public List<INunoEntry> NunoEntries = new List<INunoEntry>();
+        public ushort[] BoneIDList;
 
         public void Parse(BinaryReader r)
         {
@@ -34,18 +38,29 @@ namespace RDBExplorer.Core.Formats.G1M
                 uint version = r.ReadUInt32();
                 uint size = r.ReadUInt32();
 
-                if (magic == 0x47314D53)
-                    ParseG1MS(r, start);          // G1MS
-                else if (magic == 0x47314D47)
-                    ParseG1MG(r, start, version); // G1MG
+                if (magic == 0x4F4E554E)
+                    magic = 0x4E554E4F;
+
+                switch (magic)
+                {
+                    case 0x47314D53: // G1MS
+                        ParseG1MS(r, start);
+                        break;
+                    case 0x47314D47: // G1MG
+                        ParseG1MG(r, start, version);
+                        break;
+                    case 0x4E554E4F: // NUNO
+                        ParseNuno(r, start);
+                        break;
+                }
 
                 r.BaseStream.Position = start + size;
             }
         }
 
-        
+
         // G1MS  –  Skeleton
-        
+
         private void ParseG1MS(BinaryReader r, long start)
         {
             // Header layout (after magic/version/size that were already read):
@@ -65,13 +80,13 @@ namespace RDBExplorer.Core.Formats.G1M
             r.ReadUInt16(); // pad
 
             // Read boneIDList (used to map joint index → global bone ID)
-            var boneIDList = new ushort[jointIndicesCount];
+            BoneIDList = new ushort[jointIndicesCount];
             var boneToBoneID = new Dictionary<int, int>(); // boneID → list index
             for (int i = 0; i < jointIndicesCount; i++)
             {
-                boneIDList[i] = r.ReadUInt16();
-                if (boneIDList[i] != 0xFFFF)
-                    boneToBoneID[boneIDList[i]] = i;
+                BoneIDList[i] = r.ReadUInt16();
+                if (BoneIDList[i] != 0xFFFF)
+                    boneToBoneID[BoneIDList[i]] = i;
             }
 
             // Read joint data
@@ -110,9 +125,9 @@ namespace RDBExplorer.Core.Formats.G1M
             }
         }
 
-        
+
         // G1MG  –  Geometry
-        
+
         private void ParseG1MG(BinaryReader r, long start, uint version)
         {
             // After magic(4)+version(4)+size(4) = 0x0C:
@@ -134,13 +149,27 @@ namespace RDBExplorer.Core.Formats.G1M
 
                 switch (magic)
                 {
-                    case 0x00010002: ParseMaterials(r, count); break;
-                    case 0x00010004: ParseVertexBuffers(r, count, version); break;
-                    case 0x00010005: ParseVertexAttributes(r, count); break;
-                    case 0x00010006: ParseJointPalettes(r, count); break;
-                    case 0x00010007: ParseIndexBuffers(r, count, version); break;
-                    case 0x00010008: ParseSubmeshes(r, count); break;
-                     case 0x00010009: ParseMeshGroups(r, count, version); break;
+                    case 0x00010002: 
+                        ParseMaterials(r, count);
+                        break;
+                    case 0x00010004: 
+                        ParseVertexBuffers(r, count, version);
+                        break;
+                    case 0x00010005: 
+                        ParseVertexAttributes(r, count);
+                        break;
+                    case 0x00010006: 
+                        ParseJointPalettes(r, count); 
+                        break;
+                    case 0x00010007: 
+                        ParseIndexBuffers(r, count, version); 
+                        break;
+                    case 0x00010008: 
+                        ParseSubmeshes(r, count);
+                        break;
+                    case 0x00010009: 
+                        ParseMeshGroups(r, count, version);
+                        break;
                     default:
                         Console.WriteLine($"unhandle magic: 0x{magic:X08}");
                         break;
@@ -176,9 +205,9 @@ namespace RDBExplorer.Core.Formats.G1M
             }
         }
 
-        
+
         // 0x00010004  –  Vertex Buffers  (segmented)
-        
+
         private void ParseVertexBuffers(BinaryReader r, uint count, uint version)
         {
             int total = 0;
@@ -239,21 +268,23 @@ namespace RDBExplorer.Core.Formats.G1M
             }
         }
 
-        
+
         // 0x00010005  –  Vertex Attributes (Layouts)
-        
+
         private void ParseVertexAttributes(BinaryReader r, uint count)
         {
             for (int j = 0; j < (int)count; j++)
             {
                 var layout = new G1MLayoutInternal();
 
-                // 1. Buffer reference list (indirect addressing)
+                // Buffer reference list (indirect addressing)
                 uint numRefs = r.ReadUInt32();
                 for (int k = 0; k < (int)numRefs; k++)
+                {
                     layout.BufferIndices.Add(r.ReadUInt32());
+                }
 
-                // 2. Semantic descriptors – each is exactly 8 bytes:
+                // Semantic descriptors – each is exactly 8 bytes:
                 //    bufferID (ushort=2) | offset (ushort=2) | dataType (byte=1) | dummy (byte=1) | semantic (byte=1) | layer (byte=1)
                 uint numSemantics = r.ReadUInt32();
                 for (int k = 0; k < (int)numSemantics; k++)
@@ -279,22 +310,22 @@ namespace RDBExplorer.Core.Formats.G1M
             }
         }
 
-        
+
         // 0x00010006  –  Joint Palettes
-        
+
         private void ParseJointPalettes(BinaryReader r, uint count)
         {
             for (int i = 0; i < count; i++)
             {
                 uint pCount = r.ReadUInt32();
                 var palette = new List<uint>();
+                var physPalette = new List<uint>();
                 for (int j = 0; j < pCount; j++)
                 {
                     r.ReadUInt32(); // G1MM index
-                    r.ReadUInt32(); // physics index
+                    uint physIdx = r.ReadUInt32(); // read physicsIndex
                     uint jointIdx = r.ReadUInt32();
 
-                    // Логіка 0x80000000 з C++ та Python
                     uint actualIdx = jointIdx;
                     if ((jointIdx & 0x80000000) != 0)
                         actualIdx ^= 0x80000000;
@@ -303,13 +334,16 @@ namespace RDBExplorer.Core.Formats.G1M
                         palette.Add((uint)globalID);
                     else
                         palette.Add(actualIdx);
+
+                    physPalette.Add(physIdx & 0xFFFF);
                 }
-                ResolvedPalettes.Add(palette);
+                BonePalettes.Add(palette);
+                PhysicsPalettes.Add(physPalette);
             }
         }
-        
+
         // 0x00010007  –  Index Buffers
-        
+
         private void ParseIndexBuffers(BinaryReader r, uint count, uint version)
         {
             for (int j = 0; j < (int)count; j++)
@@ -332,9 +366,9 @@ namespace RDBExplorer.Core.Formats.G1M
             }
         }
 
-        
+
         // 0x00010008  –  Submeshes
-        
+
         private void ParseSubmeshes(BinaryReader r, uint count)
         {
             for (int i = 0; i < count; i++)
@@ -391,7 +425,9 @@ namespace RDBExplorer.Core.Formats.G1M
                     }
 
                     for (int k = 0; k < (int)(sm1 + sm2); k++)
+                    {
                         group.Meshes.Add(ReadMesh(r));
+                    }
                 }
                 else
                 {
@@ -399,7 +435,9 @@ namespace RDBExplorer.Core.Formats.G1M
                     uint sm1 = r.ReadUInt32();
                     uint sm2 = r.ReadUInt32();
                     for (int k = 0; k < (int)(sm1 + sm2); k++)
+                    {
                         group.Meshes.Add(ReadMesh(r));
+                    }
                 }
 
                 MeshGroups.Add(group);
@@ -410,7 +448,7 @@ namespace RDBExplorer.Core.Formats.G1M
         {
             var mesh = new G1MMeshInternal();
             string name = r.ReadEncodedString(16);
-          //  Console.WriteLine(name);
+            //  Console.WriteLine(name);
             mesh.ClothID = r.ReadUInt16();
             r.ReadUInt16();                       // unk
             mesh.ExternalID = r.ReadUInt32();
@@ -419,14 +457,254 @@ namespace RDBExplorer.Core.Formats.G1M
             if (idxCount > 0)
             {
                 for (int i = 0; i < (int)idxCount; i++)
+                {
                     mesh.SubmeshIndices.Add(r.ReadUInt32());
+                }
             }
             else
+            {
                 r.ReadUInt32();
+            }
 
             return mesh;
         }
 
+        private void ParseNuno(BinaryReader r, long start)
+        {
+            r.BaseStream.Position = start + 4; // skip 'NUNO'
+            uint version = r.ReadUInt32();
+            r.ReadUInt32(); // size
+            uint sectionCount = r.ReadUInt32();
+
+            for (int i = 0; i < sectionCount; i++)
+            {
+                long sectionStart = r.BaseStream.Position;
+                uint magic = r.ReadUInt32();
+                uint chunkSize = r.ReadUInt32();
+                uint entryCount = r.ReadUInt32();
+
+                var entryIDToNunoID = new Dictionary<uint, int>();
+                var tempEntries = new List<INunoEntry>();
+
+                long currentEntryOffset = r.BaseStream.Position;
+                if (version >= 0x30303335 && magic == 0x00030005)
+                {
+                    currentEntryOffset += 4;
+                }
+
+                for (int j = 0; j < entryCount; j++)
+                {
+                    r.BaseStream.Position = currentEntryOffset;
+                    long entrySize = 0;
+                    INunoEntry entry = null;
+
+                    switch (magic)
+                    {
+                        case 0x00030001: 
+                            entry = ParseNuno1Entry(r, version, out entrySize);
+                            break;
+                        case 0x00030003: 
+                            entry = ParseNuno3Entry(r, version, out entrySize);
+                            break;
+                        case 0x00030005: 
+                            entry = ParseNuno5Entry(r, version, entryIDToNunoID, out entrySize);
+                            break;
+                    }
+
+                    if (entry != null)
+                    {
+                        if (entry is Nuno5Data n5)
+                        {
+                            if (!entryIDToNunoID.ContainsKey(n5.EntryID))
+                            {
+                                entryIDToNunoID[n5.EntryID] = j;
+                            }
+                        }
+                        tempEntries.Add(entry);
+                    }
+                    currentEntryOffset += entrySize;
+                }
+
+                // Subset processing for NUNO5
+                if (magic == 0x00030005)
+                {
+                    foreach (var entry in tempEntries)
+                    {
+                        if (entry is Nuno5Data n5 && n5.ParentSetID != -1)
+                        {
+                            var parentNuno = tempEntries[n5.ParentSetID] as Nuno5Data;
+                            if (parentNuno != null)
+                            {
+                                var parentMap = new Dictionary<float, int>();
+                                for (int k = 0; k < parentNuno.ControlPoints.Count; k++)
+                                {
+                                    var cp = parentNuno.ControlPoints[k];
+                                    parentMap[cp.X + cp.Y + cp.Z] = k; // use sum as key
+                                }
+
+                                for (int k = 0; k < n5.ControlPoints.Count; k++)
+                                {
+                                    var cp = n5.ControlPoints[k];
+                                    if (parentMap.TryGetValue(cp.X + cp.Y + cp.Z, out int parentIndex))
+                                    {
+                                        var infl = n5.Influences[k];
+                                        infl.P1 = parentIndex;
+                                        n5.Influences[k] = infl;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                NunoEntries.AddRange(tempEntries);
+                r.BaseStream.Position = sectionStart + chunkSize;
+            }
+        }
+
+        private INunoEntry ParseNuno1Entry(BinaryReader r, uint version, out long entrySize)
+        {
+            long entryStart = r.BaseStream.Position;
+            var nuno1 = new Nuno1Data();
+            nuno1.ParentID = r.ReadUInt32();
+            uint cpCount = r.ReadUInt32();
+            uint unknownSectionCount = r.ReadUInt32();
+            uint skip1 = r.ReadUInt32();
+            uint skip2 = r.ReadUInt32();
+            uint skip3 = r.ReadUInt32();
+
+            long dataOffset = entryStart + 24 + 0x3C;
+            if (version > 0x30303233)
+            {
+                dataOffset += 0x10;
+            }
+            if (version >= 0x30303235)
+            {
+                dataOffset += 0x10;
+            }
+            r.BaseStream.Position = dataOffset;
+
+            for (int k = 0; k < cpCount; k++)
+            {
+                nuno1.ControlPoints.Add(new Vector4(r.ReadSingle(), r.ReadSingle(), r.ReadSingle(), r.ReadSingle()));
+            }
+            for (int k = 0; k < cpCount; k++)
+            {
+                nuno1.Influences.Add(r.ReadStruct<NunInfluence>());
+            }
+
+            entrySize = (dataOffset + (cpCount * 16) + (cpCount * 24) + (48 * unknownSectionCount) + (4 * (skip1 + skip2 + skip3))) - entryStart;
+            return nuno1;
+        }
+
+        private INunoEntry ParseNuno3Entry(BinaryReader r, uint version, out long entrySize)
+        {
+            long entryStart = r.BaseStream.Position;
+            var nuno3 = new Nuno3Data();
+            nuno3.ParentID = r.ReadUInt32();
+            uint cpCount = r.ReadUInt32();
+            uint unknownSectionCount = r.ReadUInt32();
+            uint skip1 = r.ReadUInt32();
+            r.ReadUInt32(); // unk
+            uint skip2 = r.ReadUInt32();
+            uint skip3 = r.ReadUInt32();
+            uint skip4 = r.ReadUInt32();
+
+            long dataOffset = entryStart + 32;
+            if (version < 0x30303330)
+            {
+                dataOffset += 0xA8;
+                if (version >= 0x30303235)
+                    dataOffset += 0x10;
+            }
+            else
+            {
+                r.BaseStream.Position = dataOffset;
+                uint temp = r.ReadUInt32();
+                dataOffset += 4 + temp;
+            }
+            r.BaseStream.Position = dataOffset;
+
+            for (int k = 0; k < cpCount; k++)
+            {
+                nuno3.ControlPoints.Add(new Vector4(r.ReadSingle(), r.ReadSingle(), r.ReadSingle(), r.ReadSingle()));
+            }
+            for (int k = 0; k < cpCount; k++)
+            {
+                nuno3.Influences.Add(r.ReadStruct<NunInfluence>());
+            }
+
+            entrySize = (r.BaseStream.Position + (48 * unknownSectionCount) + (4 * skip1 + 8 * skip2 + 12 * skip3 + 8 * skip4)) - entryStart;
+            return nuno3;
+        }
+
+        private INunoEntry ParseNuno5Entry(BinaryReader r, uint version, Dictionary<uint, int> entryIDToNunoID, out long entrySize)
+        {
+            long entryStart = r.BaseStream.Position;
+            var nuno5 = new Nuno5Data();
+            nuno5.ParentID = r.ReadUInt32();
+            r.ReadUInt32(); // unk
+            uint lodCount = r.ReadUInt32();
+            nuno5.EntryID = r.ReadUInt16();
+            ushort entryFlag = r.ReadUInt16();
+
+            if ((entryFlag & 0x7FF) != 0 && entryIDToNunoID.TryGetValue(nuno5.EntryID, out int parentId))
+            {
+                nuno5.ParentSetID = parentId;
+            }
+
+            r.BaseStream.Position = entryStart + 0x24;
+
+            for (int l = 0; l < lodCount; l++)
+            {
+                long lodStart = r.BaseStream.Position;
+                uint cpCount = r.ReadUInt32();
+                uint flags = r.ReadUInt32();
+                uint[] skips = new uint[9];
+                for (int s = 0; s < 9; s++)
+                {
+                    skips[s] = r.ReadUInt32();
+                }
+
+                bool useSkip10 = r.ReadUInt32() != 0;
+                uint skip10Size = 0, skip10Count = 0;
+                if (useSkip10) { 
+                    skip10Size = r.ReadUInt32();
+                    skip10Count = r.ReadUInt32(); 
+                }
+
+                long currentOffset = r.BaseStream.Position;
+                uint cpOffset = r.ReadUInt32();
+                r.BaseStream.Position = lodStart + 48 + (useSkip10 ? 8 : 0) + cpOffset;
+                {
+                    for (int k = 0; k < cpCount; k++)
+                    {
+                        nuno5.ControlPoints.Add(new Vector4(r.ReadSingle(), r.ReadSingle(), r.ReadSingle(), 1.0f));
+                        r.BaseStream.Seek(12, SeekOrigin.Current);
+                        Nuno5Influence n5Infl = r.ReadStruct<Nuno5Influence>();
+                        nuno5.Influences.Add(new NunInfluence(n5Infl));
+                    }
+                }
+
+                long nextLodPos = lodStart + 48 + (useSkip10 ? 8 : 0) + cpOffset + (cpCount * 0x2C);
+                if ((flags & 1) != 0) 
+                    nextLodPos += 0x20 * cpCount;
+                if ((flags & 2) != 0) 
+                    nextLodPos += 0x18 * cpCount;
+                nextLodPos += (skips[0] * 4 + skips[1] * 12 + skips[2] * 16 + skips[3] * 12 + skips[4] * 8 + skips[5] * 0x30 + skips[6] * 0x48 + skips[7] * 0x20);
+                if ((flags & 4) != 0) 
+                    nextLodPos += 0x4 * cpCount;
+                r.BaseStream.Position = nextLodPos;
+                for (int s = 0; s < skips[8]; s++)
+                {
+                    uint tempCount = r.ReadUInt32();
+                    r.BaseStream.Seek(tempCount * 4 + 12, SeekOrigin.Current);
+                }
+                r.BaseStream.Seek(skip10Size * skip10Count, SeekOrigin.Current);
+            }
+            entrySize = r.BaseStream.Position - entryStart;
+            return nuno5;
+        }
     }
 }
 
@@ -464,8 +742,13 @@ internal class G1MVertexBufferInternal
         switch (fmt)
         {
             case G1MDataFormat.R8G8B8A8_UINT:  // R8G8B8A8_UINT  – raw byte values
-            case G1MDataFormat.R16G16B16A16_UINT:  // R16G16B16A16_UINT (treated as bytes for indices)
                 return new Vector4(Data[o], Data[o + 1], Data[o + 2], Data[o + 3]);
+            case G1MDataFormat.R16G16B16A16_UINT:
+                return new Vector4(
+                    BitConverter.ToUInt16(Data, o),
+                    BitConverter.ToUInt16(Data, o + 2),
+                    BitConverter.ToUInt16(Data, o + 4),
+                    BitConverter.ToUInt16(Data, o + 6));
 
             case G1MDataFormat.R8G8B8A8_UNORM: // R8G8B8A8_UNORM  – normalised [0,1]
                 return new Vector4(Data[o] / 255f, Data[o + 1] / 255f, Data[o + 2] / 255f, Data[o + 3] / 255f);
@@ -513,7 +796,8 @@ internal class G1MIndexBufferInternal
         for (int i = 0; i < (int)count; i++)
         {
             int o = ((int)start + i) * Step;
-            if (o + Step > Data.Length) break;
+            if (o + Step > Data.Length) 
+                break;
             res[i] = (Step == 4)
                 ? BitConverter.ToUInt32(Data, o)
                 : BitConverter.ToUInt16(Data, o);
@@ -560,7 +844,7 @@ internal class G1MSemanticInternal
 
 internal class G1MTextureRef
 {
-    public ushort Index;       // індекс в G1T
+    public ushort Index;       // index in G1T
     public ushort Layer;       // TEXCOORD layer
     public ushort TextureType; // 0=diffuse, 1=normal, 2=specular...
 }
@@ -573,7 +857,7 @@ internal class G1MMeshInternal
 {
     public ushort ClothID;
     public uint ExternalID;
-    public List<uint> SubmeshIndices = new(); // індекси в Submeshes[]
+    public List<uint> SubmeshIndices = new(); // indexes в Submeshes[]
 }
 
 internal class G1MMeshGroupInternal
@@ -581,36 +865,4 @@ internal class G1MMeshGroupInternal
     public uint LOD;
     public uint Group;
     public List<G1MMeshInternal> Meshes = new();
-}
-
-internal enum G1MSemanticType
-{
-    POSITION = 0,
-    BLENDWEIGHT = 1,
-    BLENDINDICES = 2,
-    NORMAL = 3,
-    PSIZE = 4,
-    TEXCOORD = 5,
-    TANGENT = 6,
-    BINORMAL = 7,
-    TESSFACTOR = 8,
-    POSITIONT = 9,
-    COLOR = 10,
-    FOG = 11,
-    DEPTH = 12,
-    SAMPLE = 13
-}
-
-internal enum G1MDataFormat : byte
-{
-    R32_FLOAT = 0,
-    R32G32_FLOAT = 1,
-    R32G32B32_FLOAT = 2,
-    R32G32B32A32_FLOAT = 3,
-    R8G8B8A8_UINT = 5,
-    R16G16B16A16_UINT = 7,
-    R32G32B32A32_UINT = 10,
-    R16G16_FLOAT = 10,
-    R16G16B16A16_FLOAT = 11,
-    R8G8B8A8_UNORM = 13
 }

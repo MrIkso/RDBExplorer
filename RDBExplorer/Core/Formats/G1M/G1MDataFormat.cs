@@ -1,0 +1,14 @@
+﻿namespace RDBExplorer.Core.Formats.G1M;
+internal enum G1MDataFormat : byte
+{
+    R32_FLOAT = 0,
+    R32G32_FLOAT = 1,
+    R32G32B32_FLOAT = 2,
+    R32G32B32A32_FLOAT = 3,
+    R8G8B8A8_UINT = 5,
+    R16G16B16A16_UINT = 7,
+    R32G32B32A32_UINT = 10,
+    R16G16_FLOAT = 10,
+    R16G16B16A16_FLOAT = 11,
+    R8G8B8A8_UNORM = 13
+}

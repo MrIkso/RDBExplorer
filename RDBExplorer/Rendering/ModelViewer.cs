@@ -21,7 +21,7 @@ namespace Metanoia.Rendering
         private Vector3 _defaultTarget = Vector3.Zero;
         private float _defaultDistance = 100f;
 
-        private bool ShowBones = true;
+        private bool ShowBones = false;
 
         private int Frame { get => _frame; set { _frame = value; frameLabel.Text = $"Frame: {_frame} / {MaxFrame}"; } }
         private int MaxFrame { get => _maxFrame; set { _maxFrame = value; frameLabel.Text = $"Frame: {Frame} / {_maxFrame}"; } }
