@@ -126,6 +126,7 @@ namespace RDBExplorer.Forms
                         var listViewer = new EntryListViewControl();
                         listViewer.OnExportRequested += (sender, entry) => ExportEntry(entry);
                         listViewer.OnExtractAllData += (sender, data) => ExtractAllData(data);
+                        listViewer.OnItemClickedRequested += (sender, entry) => OpenItem(entry);
                         listViewer.Dock = DockStyle.Fill;
                         resourceViewTabPage.Controls.Add(listViewer);
 
@@ -266,8 +267,7 @@ namespace RDBExplorer.Forms
             }
         }
 
-        
-
+ 
         private async void saveParsedResultToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (CurrentParser == null || !CurrentParser.IsConvertedToText)
@@ -336,6 +336,13 @@ namespace RDBExplorer.Forms
                 {
                     await File.WriteAllBytesAsync(sfd.FileName, entry.Data);
                 }
+            }
+        }
+
+        private void OpenItem(EntryData entry)
+        {
+            if (!string.IsNullOrEmpty(entry.Name) && entry.Name.EndsWith(".g1m")) { 
+                new ModelViewForm(entry.Name, entry.Data).Show();
             }
         }
 

@@ -13,6 +13,7 @@ namespace RDBExplorer.Controls
     public partial class EntryListViewControl : UserControl
     {
         public event EventHandler<EntryData>? OnExportRequested;
+        public event EventHandler<EntryData>? OnItemClickedRequested;
         public event EventHandler<List<EntryData>> OnExtractAllData;
         private List<EntryData> _entries;
 
@@ -69,6 +70,12 @@ namespace RDBExplorer.Controls
         private void extractAllDataBtn_Click(object sender, EventArgs e)
         {
             OnExtractAllData?.Invoke(this, _entries);
+        }
+
+        private void entryListView_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            var entry = entryListView.SelectedItems[0].Tag as EntryData;
+            OnItemClickedRequested?.Invoke(this, entry);
         }
     }
 }

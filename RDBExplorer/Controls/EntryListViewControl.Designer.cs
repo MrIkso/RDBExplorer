@@ -37,6 +37,7 @@
             entryListView.TabIndex = 0;
             entryListView.UseCompatibleStateImageBehavior = false;
             entryListView.View = View.Details;
+            entryListView.MouseDoubleClick += entryListView_MouseDoubleClick;
             // 
             // columnName
             // 

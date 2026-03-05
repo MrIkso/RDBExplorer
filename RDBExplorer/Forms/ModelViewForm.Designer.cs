@@ -56,7 +56,7 @@ namespace RDBExplorer.Forms
             // openToolStripMenuItem
             // 
             openToolStripMenuItem.Name = "openToolStripMenuItem";
-            openToolStripMenuItem.Size = new Size(224, 26);
+            openToolStripMenuItem.Size = new Size(128, 26);
             openToolStripMenuItem.Text = "Open";
             openToolStripMenuItem.Click += openToolStripMenuItem_Click;
             // 
@@ -70,6 +70,7 @@ namespace RDBExplorer.Forms
             Name = "ModelViewForm";
             StartPosition = FormStartPosition.CenterParent;
             Text = "ModelViewForm";
+            Load += ModelViewForm_Load;
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
             ResumeLayout(false);
