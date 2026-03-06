@@ -39,7 +39,9 @@
 | **StaticScreenLayoutTexInfoFile** | `.texinfo` | ✅ | UI sprite UV coordinates on texture atlases |
 | **StreamAssetDataFile** | `.srst` | ❌ | Streaming audio | `0x54535253`
 | **StreamingMeshletModelData** | `.g1ms` | ❌ | Streaming 3D model |`0x5f4d3147`
-| **StreamingTexContext** | `.g1ts` | ✅ | Streaming texture | `0x47543147`
+| **StreamingTexContext** | `.g1t` | ✅ | Streaming texture | `0x47543147`
 | **SwingData** | `.swg` | ✅ | "Swing" physics parameters (hair, cloth, soft body) | `0x53574751`
 | **TexContext** | `.g1t` | ✅ | Texture container | `0x47543147`
 | **TexStageTableBinaryFile** | `.kts` | ✅ | Texture stage configuration | `0x4753544b`
+| **GameDataBase** | `.database` | ❌ | Game database | `0x00220420`
+| **ByteCode** | `.bytecode` | ✅ | Compiled game scripts | `2011-04-29T14:26:48+0900N`
