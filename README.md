@@ -60,4 +60,11 @@ Special thanks to the developers of any third-party libraries and information us
 - [BCnEncoder.Net](https://github.com/Nominom/BCnEncoder.NET)
 - [AssetRipper.TextureDecoder](https://github.com/AssetRipper/TextureDecoder)
 - [G1T](https://github.com/hearhellacopters/G1T) - @hearhellacopters for amazing g1t file researh
+- [Metanoia](https://github.com/Ploaj/Metanoia) for amazing implementatin 3D model viewing
+- [Nioh3-Model-Texture-Mapping-Database](https://github.com/kassent/Nioh3-Model-Texture-Mapping-Database) for amazing texture database
+- [Hex.Box](https://github.com/harborsiem/Be.HexEditor) fork
+- [FastColoredTextBox](https://github.com/vurdalakov/FastColoredTextBox.NET10) fork
 - etc.
+
+Icons used from Visual Studio Image Library 2022
+https://www.microsoft.com/en-us/download/details.aspx?id=35825
