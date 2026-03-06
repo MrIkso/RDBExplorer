@@ -40,15 +40,15 @@ namespace Metanoia.Rendering
             exportAnimationToolStripMenuItem = new ToolStripMenuItem();
             exportButton = new ToolStripButton();
             toolStripSeparator4 = new ToolStripSeparator();
-            toolStripButton1 = new ToolStripButton();
-            toolStripButton3 = new ToolStripButton();
+            resetViewButton = new ToolStripButton();
+            renderToFileButtton = new ToolStripButton();
             toolStripSeparator1 = new ToolStripSeparator();
             toolStripLabel1 = new ToolStripLabel();
             renderMode = new ToolStripComboBox();
             toolStripSeparator2 = new ToolStripSeparator();
             showBoneButton = new ToolStripButton();
             toolStripSeparator3 = new ToolStripSeparator();
-            toolStripButton2 = new ToolStripButton();
+            modelPaneInfoButton = new ToolStripButton();
             animationTS = new ToolStrip();
             toolStripLabel2 = new ToolStripLabel();
             animationCB = new ToolStripComboBox();
@@ -70,23 +70,25 @@ namespace Metanoia.Rendering
             Viewport.Dock = DockStyle.Fill;
             Viewport.Flags = OpenTK.Windowing.Common.ContextFlags.Default;
             Viewport.IsEventDriven = true;
-            Viewport.Location = new Point(0, 56);
+            Viewport.Location = new Point(0, 28);
             Viewport.Margin = new Padding(4, 5, 4, 5);
             Viewport.Name = "Viewport";
             Viewport.Profile = OpenTK.Windowing.Common.ContextProfile.Compatability;
             Viewport.SharedContext = null;
-            Viewport.Size = new Size(803, 501);
+            Viewport.Size = new Size(803, 529);
             Viewport.TabIndex = 0;
             Viewport.Load += Viewport_Load;
             Viewport.Paint += Viewport_Paint;
             Viewport.KeyPress += Viewport_KeyDown;
+            Viewport.MouseDown += Viewport_MouseDown;
             Viewport.MouseMove += Viewport_MouseMove;
+            Viewport.MouseUp += Viewport_MouseUp;
             Viewport.Resize += Viewport_Resize;
             // 
             // toolStrip1
             // 
             toolStrip1.ImageScalingSize = new Size(20, 20);
-            toolStrip1.Items.AddRange(new ToolStripItem[] { toolStripDropDownButton1, exportButton, toolStripSeparator4, toolStripButton1, toolStripButton3, toolStripSeparator1, toolStripLabel1, renderMode, toolStripSeparator2, showBoneButton, toolStripSeparator3, toolStripButton2 });
+            toolStrip1.Items.AddRange(new ToolStripItem[] { toolStripDropDownButton1, exportButton, toolStripSeparator4, resetViewButton, renderToFileButtton, toolStripSeparator1, toolStripLabel1, renderMode, toolStripSeparator2, showBoneButton, toolStripSeparator3, modelPaneInfoButton });
             toolStrip1.Location = new Point(0, 0);
             toolStrip1.Name = "toolStrip1";
             toolStrip1.Size = new Size(803, 28);
@@ -102,6 +104,7 @@ namespace Metanoia.Rendering
             toolStripDropDownButton1.Name = "toolStripDropDownButton1";
             toolStripDropDownButton1.Size = new Size(46, 25);
             toolStripDropDownButton1.Text = "File";
+            toolStripDropDownButton1.Visible = false;
             // 
             // exportModelToolStripMenuItem
             // 
@@ -112,12 +115,14 @@ namespace Metanoia.Rendering
             // 
             // importAnimationToolStripMenuItem
             // 
+            importAnimationToolStripMenuItem.Enabled = false;
             importAnimationToolStripMenuItem.Name = "importAnimationToolStripMenuItem";
             importAnimationToolStripMenuItem.Size = new Size(226, 26);
             importAnimationToolStripMenuItem.Text = "Import Animation(s)";
             // 
             // exportAnimationToolStripMenuItem
             // 
+            exportAnimationToolStripMenuItem.Enabled = false;
             exportAnimationToolStripMenuItem.Name = "exportAnimationToolStripMenuItem";
             exportAnimationToolStripMenuItem.Size = new Size(226, 26);
             exportAnimationToolStripMenuItem.Text = "Export Animation";
@@ -126,10 +131,12 @@ namespace Metanoia.Rendering
             // exportButton
             // 
             exportButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            exportButton.Image = RDBExplorer.Properties.Resources.Export;
             exportButton.ImageTransparentColor = Color.Magenta;
             exportButton.Name = "exportButton";
             exportButton.Size = new Size(29, 25);
             exportButton.Text = "export button";
+            exportButton.ToolTipText = "Export Model";
             exportButton.Click += exportButton_Click;
             // 
             // toolStripSeparator4
@@ -137,24 +144,27 @@ namespace Metanoia.Rendering
             toolStripSeparator4.Name = "toolStripSeparator4";
             toolStripSeparator4.Size = new Size(6, 28);
             // 
-            // toolStripButton1
+            // resetViewButton
             // 
-            toolStripButton1.DisplayStyle = ToolStripItemDisplayStyle.Image;
-            toolStripButton1.ImageTransparentColor = Color.Magenta;
-            toolStripButton1.Name = "toolStripButton1";
-            toolStripButton1.Size = new Size(29, 25);
-            toolStripButton1.Text = "toolStripButton1";
-            toolStripButton1.ToolTipText = "Reset View";
-            toolStripButton1.Click += toolStripButton1_Click;
+            resetViewButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            resetViewButton.Image = RDBExplorer.Properties.Resources.ResetView;
+            resetViewButton.ImageTransparentColor = Color.Magenta;
+            resetViewButton.Name = "resetViewButton";
+            resetViewButton.Size = new Size(29, 25);
+            resetViewButton.Text = "toolStripButton1";
+            resetViewButton.ToolTipText = "Reset View";
+            resetViewButton.Click += resetViewButton_Click;
             // 
-            // toolStripButton3
+            // renderToFileButtton
             // 
-            toolStripButton3.DisplayStyle = ToolStripItemDisplayStyle.Image;
-            toolStripButton3.ImageTransparentColor = Color.Magenta;
-            toolStripButton3.Name = "toolStripButton3";
-            toolStripButton3.Size = new Size(29, 25);
-            toolStripButton3.Text = "toolStripButton3";
-            toolStripButton3.Click += toolStripButton3_Click;
+            renderToFileButtton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            renderToFileButtton.Image = RDBExplorer.Properties.Resources.PictureAndText;
+            renderToFileButtton.ImageTransparentColor = Color.Magenta;
+            renderToFileButtton.Name = "renderToFileButtton";
+            renderToFileButtton.Size = new Size(29, 25);
+            renderToFileButtton.Text = "toolStripButton3";
+            renderToFileButtton.ToolTipText = "Render to Image";
+            renderToFileButtton.Click += renderToFileButtton_Click;
             // 
             // toolStripSeparator1
             // 
@@ -181,6 +191,7 @@ namespace Metanoia.Rendering
             // showBoneButton
             // 
             showBoneButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            showBoneButton.Image = RDBExplorer.Properties.Resources.ShowHotLines;
             showBoneButton.ImageTransparentColor = Color.Magenta;
             showBoneButton.Name = "showBoneButton";
             showBoneButton.Size = new Size(29, 25);
@@ -193,15 +204,16 @@ namespace Metanoia.Rendering
             toolStripSeparator3.Name = "toolStripSeparator3";
             toolStripSeparator3.Size = new Size(6, 28);
             // 
-            // toolStripButton2
+            // modelPaneInfoButton
             // 
-            toolStripButton2.DisplayStyle = ToolStripItemDisplayStyle.Image;
-            toolStripButton2.ImageTransparentColor = Color.Magenta;
-            toolStripButton2.Name = "toolStripButton2";
-            toolStripButton2.Size = new Size(29, 25);
-            toolStripButton2.Text = "toolStripButton2";
-            toolStripButton2.ToolTipText = "Model Information";
-            toolStripButton2.Click += toolStripButton2_Click;
+            modelPaneInfoButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            modelPaneInfoButton.Image = RDBExplorer.Properties.Resources.ShowDetailsPane;
+            modelPaneInfoButton.ImageTransparentColor = Color.Magenta;
+            modelPaneInfoButton.Name = "modelPaneInfoButton";
+            modelPaneInfoButton.Size = new Size(29, 25);
+            modelPaneInfoButton.Text = "toolStripButton2";
+            modelPaneInfoButton.ToolTipText = "Model Information";
+            modelPaneInfoButton.Click += modelPaneInfoButton_Click;
             // 
             // animationTS
             // 
@@ -212,6 +224,7 @@ namespace Metanoia.Rendering
             animationTS.Size = new Size(803, 28);
             animationTS.TabIndex = 2;
             animationTS.Text = "toolStrip2";
+            animationTS.Visible = false;
             // 
             // toolStripLabel2
             // 
@@ -300,15 +313,15 @@ namespace Metanoia.Rendering
 
         private GLControl Viewport;
         private System.Windows.Forms.ToolStrip toolStrip1;
-        private System.Windows.Forms.ToolStripButton toolStripButton1;
-        private System.Windows.Forms.ToolStripButton toolStripButton2;
+        private System.Windows.Forms.ToolStripButton resetViewButton;
+        private System.Windows.Forms.ToolStripButton modelPaneInfoButton;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripLabel toolStripLabel1;
         private System.Windows.Forms.ToolStripComboBox renderMode;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripButton showBoneButton;
-        private System.Windows.Forms.ToolStripButton toolStripButton3;
+        private System.Windows.Forms.ToolStripButton renderToFileButtton;
         private System.Windows.Forms.ToolStripButton exportButton;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
         private System.Windows.Forms.ToolStrip animationTS;

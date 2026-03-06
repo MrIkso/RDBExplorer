@@ -68,7 +68,7 @@ namespace RDBExplorer.Services
                         string modelExtention = FileTypeDetector.DetectExtension(entryData);
                         if (modelExtention.StartsWith(".g1m"))
                         {
-                            newForm = new ModelViewForm(item, entryData);
+                            newForm = new ModelViewForm(item, entryData, explorer);
                         }
                         else
                         {

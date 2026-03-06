@@ -84,9 +84,9 @@ namespace Metanoia.Rendering
         private void SetupViewport()
         {
             Viewport.MakeCurrent();
-
+#if DEBUG
             Debug.WriteLine($"[GL] {GL.GetString(StringName.Vendor)} | {GL.GetString(StringName.Renderer)} | {GL.GetString(StringName.Version)}");
-
+#endif
             GL.ClearColor(0.18f, 0.18f, 0.18f, 1f);
             GL.Enable(EnableCap.DepthTest);
             GL.DepthFunc(DepthFunction.Lequal);
@@ -131,7 +131,9 @@ namespace Metanoia.Rendering
                 if (_defaultDistance < 1f)
                     _defaultDistance = 10f;
 
+#if DEBUG
                 Debug.WriteLine($"[SetModel] center={_defaultTarget} dist={_defaultDistance}");
+#endif
             }
 
             ResetView();
@@ -158,7 +160,7 @@ namespace Metanoia.Rendering
             int vpW = Viewport.Width;
             int vpH = Viewport.Height;
 
-            const int GizmoSize = 80; 
+            const int GizmoSize = 80;
             const int GizmoPad = 20;
             int gizmoX = GizmoPad;
             int gizmoY = GizmoPad;
@@ -295,7 +297,7 @@ namespace Metanoia.Rendering
 
             var err = GL.GetError();
             if (err != ErrorCode.NoError)
-                Debug.WriteLine($"[GL ERR] {err}");
+                Console.WriteLine($"[GL ERR] {err}");
 
             GL.Viewport(0, 0, Viewport.Width, Viewport.Height);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
@@ -376,15 +378,15 @@ namespace Metanoia.Rendering
             }
             else if (e.Button == MouseButtons.Right)
             {
-                float speed = _distance * 0.001f;
+                float speed = (_distance * 0.001f);
 
                 float yawRad = MathHelper.DegreesToRadians(_yaw);
                 var right = new Vector3(MathF.Cos(yawRad), 0, -MathF.Sin(yawRad));
-
                 var up = Vector3.UnitY;
 
                 _target -= right * dx * speed;
                 _target += up * dy * speed;
+
                 UpdateCamera();
                 Viewport.Invalidate();
             }
@@ -397,7 +399,11 @@ namespace Metanoia.Rendering
         {
             float factor = e.Delta > 0 ? 0.9f : 1.1f;
             _distance *= factor;
-            _distance = Math.Clamp(_distance, 0.01f, 10_000_000f);
+            float minZoom = 0.1f;
+            float maxZoom = Math.Max(_defaultDistance * 20f, 5000f);
+
+            _distance = Math.Clamp(_distance, minZoom, maxZoom);
+
             UpdateCamera();
             Viewport.Invalidate();
         }
@@ -408,18 +414,41 @@ namespace Metanoia.Rendering
             float yawRad = MathHelper.DegreesToRadians(_yaw);
             var forward = new Vector3(MathF.Sin(yawRad), 0, MathF.Cos(yawRad));
 
-            if (e.KeyChar == 'w' || e.KeyChar == 'W') { _target += forward * step; UpdateCamera(); Viewport.Invalidate(); }
-            if (e.KeyChar == 's' || e.KeyChar == 'S') { _target -= forward * step; UpdateCamera(); Viewport.Invalidate(); }
-            if (e.KeyChar == 'f' || e.KeyChar == 'F') ResetView(); // F = focus/reset
+            if (e.KeyChar == 'w' || e.KeyChar == 'W')
+            {
+                _target += forward * step;
+                UpdateCamera();
+                Viewport.Invalidate();
+            }
+            if (e.KeyChar == 's' || e.KeyChar == 'S')
+            {
+                _target -= forward * step;
+                UpdateCamera();
+                Viewport.Invalidate();
+            }
+            if (e.KeyChar == 'f' || e.KeyChar == 'F')
+            {
+                ResetView(); // F = focus/reset
+            }
         }
 
         private void Viewport_Load(object sender, EventArgs e) => SetupViewport();
-        private void Viewport_Resize(object sender, EventArgs e) { if (_glReady) { UpdateCamera(); Viewport.Invalidate(); } }
 
-        private void toolStripButton1_Click(object sender, EventArgs e) => ResetView();
-
-        private void toolStripButton2_Click(object sender, EventArgs e)
+        private void Viewport_Resize(object sender, EventArgs e)
         {
+            if (_glReady)
+            {
+                UpdateCamera();
+                Viewport.Invalidate();
+            }
+        }
+
+        private void resetViewButton_Click(object sender, EventArgs e) => ResetView();
+
+        private void modelPaneInfoButton_Click(object sender, EventArgs e)
+        {
+            if (Model == null)
+                return;
             if (!ModelPanel.Visible)
                 ModelPanel.Show();
         }
@@ -427,17 +456,26 @@ namespace Metanoia.Rendering
         private void showBoneButton_Click(object sender, EventArgs e)
         {
             ShowBones = !ShowBones;
+            showBoneButton.Checked = ShowBones;
             Viewport.Invalidate();
         }
 
-        private void toolStripButton3_Click(object sender, EventArgs e)
-            => RenderToFile(Viewport.Width, Viewport.Height);
+        private void renderToFileButtton_Click(object sender, EventArgs e)
+        {
+            if (Model == null)
+                return;
+            RenderToFile(Viewport.Width, Viewport.Height);
+        }
 
         private void exportButton_Click(object sender, EventArgs e) => ExportModel();
         private void exportModelToolStripMenuItem_Click(object sender, EventArgs e) => ExportModel();
         public void ExportModel() { /* TODO */ }
 
-        public void EnableAnimation() { animationTS.Visible = true; Frame = 0; }
+        public void EnableAnimation()
+        {
+            animationTS.Visible = true;
+            Frame = 0;
+        }
 
         public void AddAnimation(GenericAnimation animation)
         {
@@ -515,6 +553,23 @@ namespace Metanoia.Rendering
             bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
             bmp.Save("Render.png");
             bmp.Dispose();
+        }
+
+        private void Viewport_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                Viewport.Cursor = Cursors.SizeAll;
+            }
+            else if (e.Button == MouseButtons.Left)
+            {
+                Viewport.Cursor = Cursors.Hand;
+            }
+        }
+
+        private void Viewport_MouseUp(object sender, MouseEventArgs e)
+        {
+            Viewport.Cursor = Cursors.Default;
         }
     }
 }

@@ -3,23 +3,7 @@ using System.Text;
 
 namespace RDBExplorer.Utils
 {
-    public record RdbTypeInfo
-    {
-        public string Name { get; init; }
-        public string Extension { get; init; }
-
-        public RdbTypeInfo(string name)
-        {
-            Name = name;
-            Extension = string.Empty;
-        }
-
-        public RdbTypeInfo(string name, string extension)
-        {
-            Name = name;
-            Extension = extension;
-        }
-    }
+    public record RdbTypeInfo(string Name, string Extension = "");
 
     public class TypeIDHelper
     {
@@ -27,7 +11,7 @@ namespace RDBExplorer.Utils
         public static TypeIDHelper Instance => _instance.Value;
 
         // Key = FileKtid, Value = Real Name
-        private readonly Dictionary<uint, string> _knownNames = new();
+        private Dictionary<uint, string> _knownNames = new();
 
         private TypeIDHelper() { }
 
@@ -39,18 +23,50 @@ namespace RDBExplorer.Utils
             if (!File.Exists(path))
                 return;
 
-            _knownNames.Clear();
-            var lines = File.ReadAllLines(path);
-            foreach (var line in lines)
-            {
-                var parts = line.Split(',');
-                if (parts.Length < 2) continue;
+            var newNames = new Dictionary<uint, string>();
 
-                string hexHash = parts[0].Trim().Replace("0x", "");
-                if (uint.TryParse(hexHash, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out uint ktid))
+            using (var reader = new StreamReader(path, Encoding.UTF8))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
                 {
-                    _knownNames[ktid] = parts[1].Trim();
+                    if (string.IsNullOrWhiteSpace(line))
+                        continue;
+
+                    int commaIndex = line.IndexOf(',');
+                    if (commaIndex == -1) 
+                        continue;
+
+                    string hexPart = line.Substring(0, commaIndex).Trim();
+                    string namePart = line.Substring(commaIndex + 1).Trim();
+
+                    if (hexPart.StartsWith("0x")) hexPart = hexPart.Substring(2);
+
+                    if (uint.TryParse(hexPart, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out uint ktid))
+                    {
+                        newNames[ktid] = namePart;
+                    }
                 }
+            }
+
+            _knownNames = newNames;
+        }
+
+        public void SaveNamesToCsv(string path)
+        {
+            try
+            {
+                using (var writer = new StreamWriter(path, false, Encoding.UTF8))
+                {
+                    foreach (var kvp in _knownNames)
+                    {
+                        writer.WriteLine($"0x{kvp.Key:X8},{kvp.Value}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving dictionary: {ex.Message}");
             }
         }
 
@@ -58,19 +74,6 @@ namespace RDBExplorer.Utils
         {
             _knownNames[ktid] = newName;
             SaveNamesToCsv(csvPath);
-        }
-
-        public void SaveNamesToCsv(string path)
-        {
-            try
-            {
-                var lines = _knownNames.Select(kv => $"0x{kv.Key:X8},{kv.Value}");
-                File.WriteAllLines(path, lines);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error saving dictionary: {ex.Message}");
-            }
         }
 
         public string GetFileName(uint fileKtid, uint typeInfoKtid)
@@ -88,7 +91,7 @@ namespace RDBExplorer.Utils
             {
                 // common files
                 0xAFBEC60C => new("TexContext", ".g1t"),
-                0xAD57EBBA => new("StreamingTexContext", ".g1ts"),
+                0xAD57EBBA => new("StreamingTexContext", ".g1t"),
                 0x563BDEF1 => new("ModelData", ".g1m"),
                 0x786DCD84 => new("G1NFile", ".g1n"),
                 0x17614AF5 => new("G1MXFile", ".g1mx"),

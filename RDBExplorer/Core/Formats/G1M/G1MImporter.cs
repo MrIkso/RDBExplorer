@@ -13,7 +13,9 @@ namespace RDBExplorer.Core.Formats.G1M
 
         private void Log(string msg)
         {
+#if DEBUG
             Console.WriteLine(msg);
+#endif
         }
 
         public void Open(string path)
@@ -84,6 +86,20 @@ namespace RDBExplorer.Core.Formats.G1M
 
             var submeshClothId = new Dictionary<int, int>();
             var submeshExternalId = new Dictionary<int, uint>();
+
+            foreach (var matInternal in _data.Materials)
+            {
+                if (matInternal.Textures.Count > 0)
+                {
+                    foreach (var tex in matInternal.Textures)
+                    {
+                        var genMat = new GenericMaterial();
+                        genMat.TextureDiffuse = $"Texture_{tex.Index}";
+                        genMat.EnableBlend = true;
+                        model.MaterialBank[$"Material_{tex.Index}"] = genMat;
+                    }
+                }
+            }
 
             foreach (var group in _data.MeshGroups)
             {

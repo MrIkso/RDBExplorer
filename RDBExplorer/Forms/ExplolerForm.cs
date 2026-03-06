@@ -54,6 +54,22 @@ namespace RDBExplorer.Forms
 
             var extractItem = new ToolStripMenuItem("Extract Selected");
             extractItem.Click += async (s, e) => await ExtractSelectedFiles();
+
+            var exportWithTexturesItem = new ToolStripMenuItem("Export with Textures");
+            exportWithTexturesItem.Click += async (s, e) => await ExportModelWithTextures();
+
+            _contextMenu.Opening += (s, e) =>
+            {
+                if (archiveList.SelectedIndices.Count > 0)
+                {
+                    var entry = _filteredDisplayList[archiveList.SelectedIndices[0]];
+                    KTFileType tFileType = (KTFileType)entry.TypeInfoKtid;
+                    bool show = tFileType == KTFileType.ModelData || tFileType == KTFileType.StreamingMeshletModelData;
+                    exportWithTexturesItem.Visible = show;
+                }
+            };
+
+
             var renameItem = new ToolStripMenuItem("Rename File");
             renameItem.Click += (s, e) => RenameSelectedFile();
 
@@ -72,6 +88,7 @@ namespace RDBExplorer.Forms
             injectData.Click += async (s, e) => await UpdateEntryData();
 
             _contextMenu.Items.Add(extractItem);
+            _contextMenu.Items.Add(exportWithTexturesItem);
             _contextMenu.Items.Add(new ToolStripSeparator());
             _contextMenu.Items.Add(renameItem);
             _contextMenu.Items.Add(new ToolStripSeparator());
@@ -380,6 +397,75 @@ namespace RDBExplorer.Forms
             await ExtractFiles(false);
         }
 
+        private async Task ExportModelWithTextures()
+        {
+            if (archiveList.SelectedIndices.Count == 0)
+                return;
+
+            var entry = _filteredDisplayList[archiveList.SelectedIndices[0]];
+
+            using var fbd = new FolderBrowserDialog();
+            if (fbd.ShowDialog() != DialogResult.OK)
+                return;
+            try
+            {
+                string folderName = !string.IsNullOrEmpty(entry.Name) ? entry.Name : entry.FileKtid.ToString("X8");
+                string targetDir = Path.Combine(fbd.SelectedPath, Path.GetFileNameWithoutExtension(folderName));
+                if (!Directory.Exists(targetDir))
+                {
+                    Directory.CreateDirectory(targetDir);
+                }
+
+                uint[] textureHashes = Array.Empty<uint>();
+                TextureMapService.Instance.ModelToTextures.TryGetValue(entry.FileKtid, out textureHashes);
+
+                int totalSteps = 1 + (textureHashes?.Length ?? 0);
+                progressBarOperation.Value = 0;
+                progressBarOperation.Maximum = totalSteps;
+                archiveList.Enabled = false;
+                _contextMenu.Enabled = false;
+
+                await Task.Run(() =>
+                {
+                    this.Invoke(new Action(() => toolStripStatusLabel.Text = $"Exporting model: {entry.Name}..."));
+                    _archiveExploler.Extract(entry, targetDir, true);
+
+                    this.Invoke(new Action(() => progressBarOperation.Value = 1));
+
+                    if (textureHashes != null)
+                    {
+                        for (int i = 0; i < textureHashes.Length; i++)
+                        {
+                            uint texHash = textureHashes[i];
+                            var texEntry = _archiveExploler.FindEntryByKtId(texHash);
+
+                            if (texEntry != null)
+                            {
+                                this.Invoke(new Action(() => toolStripStatusLabel.Text = $"Exporting texture {i + 1}/{textureHashes.Length}: 0x{texHash:X8}"));
+                                _archiveExploler.Extract(texEntry, targetDir, true);
+                            }
+                            this.Invoke(new Action(() => progressBarOperation.Value = Math.Min(i + 2, totalSteps)));
+                        }
+                    }
+                });
+
+               // toolStripStatusLabel.Text = $"Successfully exported to: {targetDir}";
+                MessageBox.Show($"Export finished!\nModel and {textureHashes?.Length ?? 0} textures saved to folder.",
+                                "Export Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Export failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                archiveList.Enabled = true;
+                _contextMenu.Enabled = true;
+                progressBarOperation.Value = 0;
+            }
+        }
+
+
         Dictionary<uint, string> names = new Dictionary<uint, string>();
         private HashSet<string> usedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -523,18 +609,14 @@ namespace RDBExplorer.Forms
                 string extension = TypeIDHelper.GetExtension(rdb.TypeInfoKtid);
                 string candidateName = $"{baseName}{extension}";
 
-                // Якщо такий KTID вже перейменований — пропускаємо
                 if (names.ContainsKey(rdb.FileKtid))
                     continue;
-
-                // Логіка створення унікального імені
                 if (usedNames.Contains(candidateName))
                 {
                     int index = 1;
                     string newName;
                     do
                     {
-                        // Формат: Name_1.ext, Name_2.ext і т.д.
                         newName = $"{baseName}_{index}{extension}";
                         index++;
                     }
@@ -543,7 +625,6 @@ namespace RDBExplorer.Forms
                     candidateName = newName;
                 }
 
-                // Додаємо в словник імен та в список використаних імен
                 if (names.TryAdd(rdb.FileKtid, candidateName))
                 {
                     usedNames.Add(candidateName);
@@ -759,6 +840,7 @@ namespace RDBExplorer.Forms
                 TypeIDHelper.Instance.LoadNamesFromCsv("rdb_names.csv");
                 KidsObjNameTypeIDHelper.Instance.Load("kidstypeinfodb.yml");
                 KidsObjNameTypeIDHelper.Instance.LoadProperties("all_properties.csv");
+                TextureMapService.Initialize("all_g1m2glt_agg.json");
             });
         }
 

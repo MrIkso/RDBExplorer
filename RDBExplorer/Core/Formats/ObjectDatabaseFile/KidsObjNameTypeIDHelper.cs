@@ -1,91 +1,85 @@
 ﻿using RDBExplorer.Core.Models;
 using RDBExplorer.Utils;
 using System.Globalization;
+using YamlDotNet.Serialization;
 
 namespace RDBExplorer.Core.Formats.ObjectDatabaseFile
 {
     public class KidsObjNameTypeIDHelper
     {
-
         private static readonly Lazy<KidsObjNameTypeIDHelper> _instance = new(() => new KidsObjNameTypeIDHelper());
         public static KidsObjNameTypeIDHelper Instance => _instance.Value;
 
-        // Key = FileKtid, Value = Real Name
         private Dictionary<uint, NameInfo> _knownNames = new();
-
         private Dictionary<uint, string> _knownProperties = new();
+
         private KidsObjNameTypeIDHelper() { }
 
         public void Load(string path)
         {
-            if (!File.Exists(path)) {
-                return;
-            }
-
-            string yamlContent = File.ReadAllText(path);
-            var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
-            var ymlData = deserializer.Deserialize<KidsObjYml>(yamlContent);
-            Dictionary<uint, NameInfo> dictionary = ymlData.Types.Where(t => t.Name != null)
-                .GroupBy(t => t.Name.Hash)
-                .ToDictionary(g => g.Key, g => g.First().Name);
-            _knownNames = dictionary;
-        }
-
-        public void LoadProperties (string path)
-        {
-            // read from csv
-            if (!File.Exists(path))
+            if (!File.Exists(path)) 
                 return;
 
-            _knownProperties.Clear();
-            var lines = File.ReadAllLines(path);
-            foreach (var line in lines)
+            using (var reader = new StreamReader(path))
             {
-                var parts = line.Split(',');
-                if (parts.Length < 2) continue;
+                var deserializer = new DeserializerBuilder().Build();
+                var ymlData = deserializer.Deserialize<KidsObjYml>(reader);
 
-                string hexHash = parts[0].Trim().Replace("0x", "");
-                if (uint.TryParse(hexHash, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out uint ktid))
+                if (ymlData?.Types != null)
                 {
-                    _knownProperties[ktid] = parts[1].Trim();
+                    _knownNames = ymlData.Types
+                        .Where(t => t.Name != null)
+                        .GroupBy(t => t.Name.Hash)
+                        .ToDictionary(g => g.Key, g => g.First().Name);
                 }
             }
         }
 
-        public string GetPropertyName(uint ktid)
+        public void LoadProperties(string path)
         {
-            if (_knownProperties.TryGetValue(ktid, out var name))
+            if (!File.Exists(path))
+                return;
+            var newProperties = new Dictionary<uint, string>();
+
+            using (var reader = new StreamReader(path))
             {
-                return name;
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    if (string.IsNullOrWhiteSpace(line)) 
+                        continue;
+
+                    var parts = line.Split(',');
+                    if (parts.Length < 2)
+                        continue;
+
+                    string hexHash = parts[0].Trim();
+                    if (hexHash.StartsWith("0x")) hexHash = hexHash.Substring(2);
+
+                    if (uint.TryParse(hexHash, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out uint ktid))
+                    {
+                        newProperties[ktid] = parts[1].Trim();
+                    }
+                }
             }
-            return null;
+
+            _knownProperties = newProperties;
         }
 
-        public string GetFullName(uint ktid)
-        {
-            if (_knownNames.TryGetValue(ktid, out var nameInfo))
-            {
-                return nameInfo.FullName;
-            }
-            return null;
-        }
+
+        public string GetPropertyName(uint ktid) =>
+            _knownProperties.TryGetValue(ktid, out var name) ? name : null;
+
+        public string GetFullName(uint ktid) =>
+            _knownNames.TryGetValue(ktid, out var nameInfo) ? nameInfo.FullName : null;
 
         public string GetLocalName(uint ktid)
         {
             if (_knownNames.TryGetValue(ktid, out var nameInfo))
-            {
                 return nameInfo.LocalName;
-            }
-            else {
 
-                string name = TypeIDHelper.GetTypeName(ktid);
-                if (!name.StartsWith("Unknown"))
-                {
-                    return name;
-                }
-            }
-            return null;
+            string name = TypeIDHelper.GetTypeName(ktid);
+            return !name.StartsWith("Unknown") ? name : null;
         }
-
     }
 }

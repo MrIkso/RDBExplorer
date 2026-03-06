@@ -55,6 +55,8 @@ namespace RDBExplorer.Core.Formats.ObjectDatabaseFile
                         obj.EntrySize = br.ReadUInt32();
                         obj.KTID = br.ReadUInt32();
                         obj.TypeInfoKTID = br.ReadUInt32();
+                        obj.ParentObjectFileKtid = null;
+                        obj.ParentObjectKtid = null;
                         numColumns = br.ReadUInt32();
                     }
                     else if (entrySig == KidsObjDbConstants.KODR_SIGNATURE)

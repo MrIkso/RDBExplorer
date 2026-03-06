@@ -1,6 +1,12 @@
-﻿using Metanoia.Rendering;
+﻿using Metanoia.Modeling;
+using Metanoia.Rendering;
+using RDBExplorer.Core;
 using RDBExplorer.Core.Formats.G1M;
+using RDBExplorer.Core.Formats.G1T;
 using RDBExplorer.Core.Models;
+using RDBExplorer.Services;
+using RDBExplorer.Utils;
+using System.Diagnostics;
 
 namespace RDBExplorer.Forms
 {
@@ -9,6 +15,7 @@ namespace RDBExplorer.Forms
         public ModelViewer ModelViewer;
         private string _currentFileName;
         private byte[] _rawData;
+        private ArchiveExploler _exploler;
 
         public ModelViewForm()
         {
@@ -16,6 +23,8 @@ namespace RDBExplorer.Forms
             ModelViewer = new ModelViewer();
             ModelViewer.Dock = DockStyle.Fill;
             this.Controls.Add(ModelViewer);
+            this.menuStrip1.SendToBack();
+            ModelViewer.BringToFront();
         }
 
 
@@ -28,12 +37,13 @@ namespace RDBExplorer.Forms
             UpdateTitle();
         }
 
-        public ModelViewForm(RDBEntry entry, byte[] data) : this()
+        public ModelViewForm(RDBEntry entry, byte[] data, ArchiveExploler archiveExploler) : this()
         {
             _currentFileName = entry.Name;
             _rawData = data;
+            _exploler = archiveExploler;
 
-            _ = LoadModelAsync(data);
+            _ = LoadModelAsync(data, entry.FileKtid);
             UpdateTitle();
         }
 
@@ -49,13 +59,12 @@ namespace RDBExplorer.Forms
                 UpdateTitle();
 
                 byte[] data = await Task.Run(() => File.ReadAllBytes(selectedFile));
-                
+
                 await LoadModelAsync(data);
             }
         }
 
-
-        private async Task LoadModelAsync(byte[] data)
+        private async Task LoadModelAsync(byte[] data, uint? modelId = null)
         {
             try
             {
@@ -68,6 +77,47 @@ namespace RDBExplorer.Forms
                     return g1MImporter.ToGenericModel();
                 });
 
+             /*   if (modelId != null && TextureMapService.Instance.ModelToTextures.TryGetValue((uint)modelId, out uint[] textureHashes))
+                {
+                    await Task.Run(() =>
+                    {
+                        for (int i = 0; i < textureHashes.Length; i++)
+                        {
+                            uint texHash = textureHashes[i];
+                            RDBEntry? entry = _exploler.FindEntryByKtId(texHash);
+                            if (entry == null)
+                                continue;
+                            G1TParser g1TParser = new G1TParser();
+                            g1TParser.Load(_exploler.GetEntryData(entry));
+                            var g1tTexture = g1TParser.G1TFile.Textures[0];
+
+                            byte[]? decodedData = TextureConverter.DecodeG1t(g1tTexture, 0, 0);
+                            if (decodedData == null) 
+                                continue;
+
+                            var genTex = new GenericTexture
+                            {
+                                Name = $"Texture_{i}",
+                                Width = g1tTexture.Width,
+                                Height = g1tTexture.Height,
+                                PixelFormat = OpenTK.Graphics.OpenGL.PixelFormat.Bgra
+                            };
+                            genTex.Mipmaps.Add(decodedData);
+
+                            genericModel.TextureBank[genTex.Name] = genTex;
+                        }
+
+                        foreach (var matKvp in genericModel.MaterialBank)
+                        {
+                            string indexStr = matKvp.Key.Replace("Material_", "");
+                            if (genericModel.TextureBank.ContainsKey($"Texture_{indexStr}"))
+                            {
+                                matKvp.Value.TextureDiffuse = $"Texture_{indexStr}";
+                            }
+                        }
+                    });
+                }
+*/
                 ModelViewer.SetModel(genericModel);
 
             }
@@ -106,5 +156,6 @@ namespace RDBExplorer.Forms
         {
             UpdateTitle();
         }
+
     }
 }

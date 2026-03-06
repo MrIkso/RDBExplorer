@@ -85,9 +85,9 @@ namespace RDBExplorer.Core.Formats.ObjectDatabaseFile
         public string TypeFullName => KidsObjNameTypeIDHelper.Instance.GetFullName(TypeInfoKTID);
         public bool IsReference { get; set; }
         [JsonConverter(typeof(JsonHexUintConverter))]
-        public uint ParentObjectFileKtid { get; set; }
+        public uint? ParentObjectFileKtid { get; set; }
         [JsonConverter(typeof(JsonHexUintConverter))]
-        public uint ParentObjectKtid { get; set; }
+        public uint? ParentObjectKtid { get; set; }
         public uint EntrySize { get; set; }
         public List<KidsOdbColumn> Columns { get; set; } = new List<KidsOdbColumn>();
        
