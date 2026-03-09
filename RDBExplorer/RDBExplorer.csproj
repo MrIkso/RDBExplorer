@@ -42,10 +42,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Core\Formats\KSCL\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>

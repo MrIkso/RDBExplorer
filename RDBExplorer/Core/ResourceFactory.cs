@@ -24,6 +24,7 @@ namespace RDBExplorer.Core
                 KTFileType.ShaderBindTableBinaryFile => new SidWrapper(),
                 KTFileType.RBFData => new GRBFWrapper(),
                 KTFileType.SwingData => new SWGWrapper(),
+                KTFileType.KSCLFile => new KSCLWrapper(),
                 _ => null /*throw new NotSupportedException($"This file type: {type} not supported!")*/
             };
         }
