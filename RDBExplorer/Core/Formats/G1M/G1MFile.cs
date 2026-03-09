@@ -1,10 +1,10 @@
 ﻿using OpenTK.Mathematics;
-using RDBExplorer.Core.Formats.G1M;
 using RDBExplorer.Utils;
+using static System.Collections.Specialized.BitVector32;
 
 namespace RDBExplorer.Core.Formats.G1M
 {
-    internal class G1MData
+    public class G1MData
     {
         public List<G1MBoneInternal> Skeleton = new List<G1MBoneInternal>();
         public List<G1MVertexBufferInternal> VertexBuffers = new List<G1MVertexBufferInternal>();
@@ -22,9 +22,11 @@ namespace RDBExplorer.Core.Formats.G1M
 
         public void Parse(BinaryReader r)
         {
-            r.ReadUInt32(); // Magic
-            r.ReadUInt32(); // Version
-            r.ReadUInt32(); // FileSize
+            ResourceHeader mainResoureHeader = r.ReadStruct<ResourceHeader>();
+            if (mainResoureHeader.Magic != 0x47314D5F)
+            {
+                throw new InvalidDataException($"Invalid magic: 0x{mainResoureHeader.Magic:X8}. Expected G1M_.");
+            }
             uint headerOffset = r.ReadUInt32();
             r.ReadUInt32();
             uint chunkCount = r.ReadUInt32();
@@ -34,30 +36,38 @@ namespace RDBExplorer.Core.Formats.G1M
             for (int i = 0; i < chunkCount; i++)
             {
                 long start = r.BaseStream.Position;
-                uint magic = r.ReadUInt32();
-                uint version = r.ReadUInt32();
-                uint size = r.ReadUInt32();
+                ResourceHeader resourceHeader = r.ReadStruct<ResourceHeader>();
 
-                if (magic == 0x4F4E554E)
-                    magic = 0x4E554E4F;
+                if (resourceHeader.Magic == 0x4F4E554E)
+                    resourceHeader.Magic = 0x4E554E4F;
 
-                switch (magic)
+                switch (resourceHeader.Magic)
                 {
                     case 0x47314D53: // G1MS
+                        // ReadSkeltonInfoSection
                         ParseG1MS(r, start);
                         break;
                     case 0x47314D47: // G1MG
-                        ParseG1MG(r, start, version);
+                        // ReadGeometryPallete
+                        ParseG1MG(r, start, resourceHeader.Version);
                         break;
                     case 0x4E554E4F: // NUNO
+                        // ReadClothInfoSection
                         ParseNuno(r, start);
                         break;
                 }
 
-                r.BaseStream.Position = start + size;
+                r.BaseStream.Position = start + resourceHeader.SectionSize;
             }
         }
 
+        public struct ResourceHeader
+        {
+            // common resource header
+            public uint Magic;
+            public uint Version;
+            public uint SectionSize;
+        }
 
         // G1MS  –  Skeleton
 
@@ -125,57 +135,141 @@ namespace RDBExplorer.Core.Formats.G1M
             }
         }
 
-
         // G1MG  –  Geometry
+        public class G1MGHeader
+        {
+            // chunk header
+            public string Platform { get; set; }
+            public uint Reverserd { get; set; }
+
+            // bounds
+            public Vector3 Min { get; set; }
+            public Vector3 Max { get; set; }
+
+            public uint SectionCount { get; set; }
+        };
+
+        public struct GeometrySection
+        {
+            public GeometrySectionType Type { get; set; }
+            public ushort Version { get; set; }
+            public uint Size { get; set; }
+            public uint Count { get; set; }
+        }
+
+        public enum GeometrySectionType : ushort
+        {
+            Section1 = 1,
+            Materials = 2,
+            PropertySetPallete = 3,
+            VertexBuffer = 4,
+            VertexStreamSetPallete = 5,
+            JointPalettes = 6,
+            IndexStreamPallete = 7,
+            Submesh = 8,
+            Mesh = 9,
+            NunoSimulationVertices = 10,
+            PhysicsVertexIndices = 11,
+            PhysicsConstraints = 12,
+            SpringData = 13,
+            CollisionDistance = 14,
+            PhysicsBoneMap = 15,
+            WindInfluence = 16,
+            SoftBodyShapes = 17,
+            SecondaryPhysicsMap = 18,
+            ExtendedPhysics = 19,
+            DirectionalVectors = 20,
+            SimpleFlags = 21,
+            DoubleIndices = 22
+        }
 
         private void ParseG1MG(BinaryReader r, long start, uint version)
         {
-            // After magic(4)+version(4)+size(4) = 0x0C:
-            //   platform  (4 bytes)
-            //   reserved  (4 bytes)
-            //   bounding box 6×float (24 bytes)
-            //   sectionCount (4 bytes)
-            // Total skip from start = 0x0C + 4 + 4 + 24 + 4 = 0x0C + 0x20 = 0x2C,
-            // but we need to READ sectionCount, so position = start + 0x0C + 0x20
-            r.BaseStream.Position = start + 0x0C + 0x20;
+            G1MGHeader g1MGHeader = new G1MGHeader();
+            
+            g1MGHeader.Platform = r.ReadEncodedString(4);
+            g1MGHeader.Reverserd = r.ReadUInt32();
+
+            g1MGHeader.Min = r.ReadStruct<Vector3>();
+            g1MGHeader.Max = r.ReadStruct<Vector3>();
+
             uint sectionCount = r.ReadUInt32();
+            g1MGHeader.SectionCount = sectionCount;
 
             for (int i = 0; i < sectionCount; i++)
             {
                 long secStart = r.BaseStream.Position;
-                uint magic = r.ReadUInt32();
-                uint size = r.ReadUInt32();
-                uint count = r.ReadUInt32();
+                GeometrySection geometrySection = r.ReadStruct<GeometrySection>();
 
-                switch (magic)
+                switch (geometrySection.Type)
                 {
-                    case 0x00010002: 
-                        ParseMaterials(r, count);
+                    case GeometrySectionType.Materials: 
+                        ParseMaterials(r, geometrySection.Count);
                         break;
-                    case 0x00010004: 
-                        ParseVertexBuffers(r, count, version);
+                    case GeometrySectionType.VertexBuffer: 
+                        ParseVertexBuffers(r, geometrySection.Count, version);
                         break;
-                    case 0x00010005: 
-                        ParseVertexAttributes(r, count);
+                    case GeometrySectionType.VertexStreamSetPallete: 
+                        ParseVertexAttributes(r, geometrySection.Count);
                         break;
-                    case 0x00010006: 
-                        ParseJointPalettes(r, count); 
+                    case GeometrySectionType.JointPalettes: 
+                        ParseJointPalettes(r, geometrySection.Count); 
                         break;
-                    case 0x00010007: 
-                        ParseIndexBuffers(r, count, version); 
+                    case GeometrySectionType.IndexStreamPallete: 
+                        ParseIndexBuffers(r, geometrySection.Count, version); 
                         break;
-                    case 0x00010008: 
-                        ParseSubmeshes(r, count);
+                    case GeometrySectionType.Submesh: 
+                        ParseSubmeshes(r, geometrySection.Count);
                         break;
-                    case 0x00010009: 
-                        ParseMeshGroups(r, count, version);
+                    case GeometrySectionType.Mesh: 
+                        ParseMeshGroups(r, geometrySection.Count, version);
                         break;
+                    case GeometrySectionType.NunoSimulationVertices:
+                        ParseSection10(r, geometrySection.Count);
+                        break;
+                    case GeometrySectionType.PhysicsVertexIndices:
+                        ParseSection11(r, geometrySection.Count);
+                        break;
+                    case GeometrySectionType.PhysicsConstraints:
+                        ParseSection12(r, geometrySection.Count);
+                        break;
+                    case GeometrySectionType.SpringData:
+                        ParseSection13(r, geometrySection.Count);
+                        break;
+                    case GeometrySectionType.CollisionDistance:
+                        ParseSection14(r, geometrySection.Count);
+                        break;
+                    case GeometrySectionType.PhysicsBoneMap:
+                        ParseSection15(r, geometrySection.Count);
+                        break;
+                    case GeometrySectionType.WindInfluence:
+                        ParseSection16(r, geometrySection.Count);
+                        break;
+                    case GeometrySectionType.SoftBodyShapes:
+                        ParseSection17(r, geometrySection.Count);
+                        break;
+                    case GeometrySectionType.SecondaryPhysicsMap:
+                        ParseSection18(r, geometrySection.Count);
+                        break;
+                    case GeometrySectionType.ExtendedPhysics:
+                        ParseSection19(r, geometrySection.Count);
+                        break;
+                    case GeometrySectionType.DirectionalVectors:
+                        ParseSection20(r, geometrySection.Count);
+                        break;
+                    case GeometrySectionType.SimpleFlags:
+                        ParseSection21(r, geometrySection.Count);
+                        break;
+                    case GeometrySectionType.DoubleIndices:
+                        ParseSection22(r, geometrySection.Count);
+                        break;
+
                     default:
-                        Console.WriteLine($"unhandle magic: 0x{magic:X08}");
+                        Console.WriteLine($"unhandle geometry section type: {((ushort)geometrySection.Type)}");
                         break;
                 }
 
-                r.BaseStream.Position = secStart + size;
+                r.BaseStream.Position = secStart + geometrySection.Size;
             }
         }
 
@@ -402,7 +496,7 @@ namespace RDBExplorer.Core.Formats.G1M
             }
         }
 
-
+        // 0x00010009  –  Meshes
         private void ParseMeshGroups(BinaryReader r, uint count, uint version)
         {
             for (int j = 0; j < (int)count; j++)
@@ -467,6 +561,217 @@ namespace RDBExplorer.Core.Formats.G1M
             }
 
             return mesh;
+        }
+
+        public struct CommonSubSection
+        {
+            public uint Count {  get; set; }
+            public uint Stride { get; set; }
+        };
+
+        private void ParseSection10(BinaryReader r, uint sectionCount)
+        {
+            for (int i = 0; i < sectionCount; i++)
+            {
+                CommonSubSection section = r.ReadStruct<CommonSubSection>();
+                Console.WriteLine($"Section10, count: {section.Count}, stride: {section.Stride}");
+                List<byte[]> bytes = new List<byte[]>();
+                for (int j = 0; j < section.Count; j++)
+                {
+                    byte[] data = r.ReadBytes((int)section.Stride);
+                    bytes.Add(data);
+                }
+            }
+        }
+        private void ParseSection11(BinaryReader r, uint sectionCount)
+        {
+            for (int i = 0; i < sectionCount; i++)
+            {
+                CommonSubSection section = r.ReadStruct<CommonSubSection>();
+                Console.WriteLine($"Section11, count: {section.Count}, stride: {section.Stride}");
+                List<byte[]> bytes = new List<byte[]>();
+                for (int j = 0; j < section.Count; j++)
+                {
+                    byte[] data = r.ReadBytes((int)section.Stride);
+                    bytes.Add(data);
+                }
+            }
+        }
+        private void ParseSection12(BinaryReader r, uint sectionCount)
+        {
+            for (int i = 0; i < sectionCount; i++)
+            {
+                CommonSubSection section = r.ReadStruct<CommonSubSection>();
+                Console.WriteLine($"Section12, count: {section.Count}, stride: {section.Stride}");
+                List<byte[]> bytes = new List<byte[]>();
+                for (int j = 0; j < section.Count; j++)
+                {
+                    byte[] data = r.ReadBytes((int)section.Stride);
+                    bytes.Add(data);
+                }
+            }
+        }
+        private void ParseSection13(BinaryReader r, uint sectionCount)
+        {
+            for (int i = 0; i < sectionCount; i++)
+            {
+                CommonSubSection section = r.ReadStruct<CommonSubSection>();
+                Console.WriteLine($"Section13, count: {section.Count}, stride: {section.Stride}");
+                List<byte[]> bytes = new List<byte[]>();
+                for (int j = 0; j < section.Count; j++)
+                {
+                    byte[] data = r.ReadBytes((int)section.Stride);
+                    bytes.Add(data);
+                }
+            }
+        }
+
+        private void ParseSection14(BinaryReader r, uint sectionCount)
+        {
+            for (int i = 0; i < sectionCount; i++)
+            {
+                CommonSubSection section = r.ReadStruct<CommonSubSection>();
+                Console.WriteLine($"Section14, count: {section.Count}, stride: {section.Stride}");
+                List<byte[]> bytes = new List<byte[]>();
+                for (int j = 0; j < section.Count; j++)
+                {
+                    byte[] data = r.ReadBytes((int)section.Stride);
+                    bytes.Add(data);
+                }
+            }
+        }
+
+        private void ParseSection15(BinaryReader r, uint sectionCount)
+        {
+            for (int i = 0; i < sectionCount; i++)
+            {
+                uint count = r.ReadUInt32();
+                Console.WriteLine($"Section15, count: {count}");
+                List<uint> list = new List<uint>();
+                for (int j = 0; j < count; j++)
+                {
+                    uint flag = r.ReadUInt32();
+                    list.Add(flag);
+                }
+            }
+        }
+
+        private void ParseSection16(BinaryReader r, uint sectionCount)
+        {
+            for (int i = 0; i < sectionCount; i++)
+            {
+                CommonSubSection section = r.ReadStruct<CommonSubSection>();
+                Console.WriteLine($"Section16, count: {section.Count}, stride: {section.Stride}");
+                List<byte[]> bytes = new List<byte[]>();
+                for (int j = 0; j < section.Count; j++)
+                {
+                    byte[] data = r.ReadBytes((int)section.Stride);
+                    bytes.Add(data);
+                }
+            }
+        }
+
+        private void ParseSection17(BinaryReader r, uint sectionCount)
+        {
+            for (int i = 0; i < sectionCount; i++)
+            {
+                CommonSubSection section = r.ReadStruct<CommonSubSection>();
+                Console.WriteLine($"Section17, count: {section.Count}, stride: {section.Stride}");
+                List<byte[]> bytes = new List<byte[]>();
+                for (int j = 0; j < section.Count; j++)
+                {
+                    byte[] data = r.ReadBytes((int)section.Stride);
+                    bytes.Add(data);
+                }
+            }
+        }
+        private void ParseSection18(BinaryReader r, uint sectionCount)
+        {
+            for (int i = 0; i < sectionCount; i++)
+            {
+                CommonSubSection section = r.ReadStruct<CommonSubSection>();
+                Console.WriteLine($"Section18, count: {section.Count}, stride: {section.Stride}");
+                List<byte[]> bytes = new List<byte[]>();
+                for (int j = 0; j < section.Count; j++)
+                {
+                    byte[] data = r.ReadBytes((int)section.Stride);
+                    bytes.Add(data);
+                }
+            }
+        }
+
+        private void ParseSection19(BinaryReader r, uint sectionCount)
+        {
+            for (int i = 0; i < sectionCount; i++)
+            {
+                CommonSubSection section = r.ReadStruct<CommonSubSection>();
+                Console.WriteLine($"Section19, count: {section.Count}, stride: {section.Stride}");
+                List<byte[]> bytes = new List<byte[]>();
+                for (int j = 0; j < section.Count; j++)
+                {
+                    byte[] data = r.ReadBytes((int)section.Stride);
+                    bytes.Add(data);
+                }
+
+            }
+        }
+
+        public struct Section20
+        {
+            public uint Index; 
+            public uint Unk1;
+            public uint Unk2;
+        }
+
+        public struct Section22
+        {
+            public uint Unk1;
+            public uint Unk2;
+        }
+
+        private void ParseSection20(BinaryReader r, uint sectionCount)
+        {
+            for (int i = 0; i < sectionCount; i++)
+            {
+                uint count = r.ReadUInt32();
+                Console.WriteLine($"Section20, count: {count}");
+                List<Section20> list = new List<Section20>();
+                for (int j = 0; j < count; j++)
+                {
+                    Section20 section = r.ReadStruct<Section20>();
+                    list.Add(section);
+                }
+            }
+        }
+        private void ParseSection21(BinaryReader r, uint sectionCount)
+        {
+            for (int i = 0; i < sectionCount; i++)
+            {
+                uint count = r.ReadUInt32();
+                Console.WriteLine($"Section21, count: {count}");
+                List<uint> list = new List<uint>();
+                for (int j = 0; j < count; j++)
+                {
+                    uint flag = r.ReadUInt32();
+                    list.Add(flag);
+                }
+            }
+
+        }
+        private void ParseSection22(BinaryReader r , uint sectionCount)
+        {
+            for (int i = 0; i < sectionCount; i++)
+            {
+                uint count = r.ReadUInt32();
+                Console.WriteLine($"Section22, count: {count}");
+                List<Section22> list = new List<Section22>();
+                for (int j = 0; j < count; j++)
+                {
+                    Section22 section = r.ReadStruct<Section22>();
+                    list.Add(section);
+                }
+            }
+
         }
 
         private void ParseNuno(BinaryReader r, long start)
@@ -706,163 +1011,4 @@ namespace RDBExplorer.Core.Formats.G1M
             return nuno5;
         }
     }
-}
-
-// Vertex Buffer helper
-internal class G1MVertexBufferInternal
-{
-    public byte[] Data;
-    public int Stride;
-
-    public G1MVertexBufferInternal(byte[] d, int s) { Data = d; Stride = s; }
-
-    public Vector3 ReadVec3(int o, G1MDataFormat fmt)
-    {
-        if (fmt == G1MDataFormat.R16G16_FLOAT || fmt == G1MDataFormat.R16G16B16A16_FLOAT)
-            return new Vector3(ReadHalf(o), ReadHalf(o + 2), ReadHalf(o + 4));
-
-        if (fmt == G1MDataFormat.R16G16B16A16_UINT) // R16G16B16A16
-            return new Vector3(
-                BitConverter.ToInt16(Data, o),
-                BitConverter.ToInt16(Data, o + 2),
-                BitConverter.ToInt16(Data, o + 4));
-
-        return new Vector3(ReadFloat(o), ReadFloat(o + 4), ReadFloat(o + 8));
-    }
-
-    public Vector2 ReadVec2(int o, G1MDataFormat fmt)
-    {
-        if (fmt == G1MDataFormat.R16G16_FLOAT || fmt == G1MDataFormat.R16G16B16A16_FLOAT)
-            return new Vector2(ReadHalf(o), ReadHalf(o + 2));
-        return new Vector2(ReadFloat(o), ReadFloat(o + 4));
-    }
-
-    public Vector4 ReadVec4(int o, G1MDataFormat fmt)
-    {
-        switch (fmt)
-        {
-            case G1MDataFormat.R8G8B8A8_UINT:  // R8G8B8A8_UINT  – raw byte values
-                return new Vector4(Data[o], Data[o + 1], Data[o + 2], Data[o + 3]);
-            case G1MDataFormat.R16G16B16A16_UINT:
-                return new Vector4(
-                    BitConverter.ToUInt16(Data, o),
-                    BitConverter.ToUInt16(Data, o + 2),
-                    BitConverter.ToUInt16(Data, o + 4),
-                    BitConverter.ToUInt16(Data, o + 6));
-
-            case G1MDataFormat.R8G8B8A8_UNORM: // R8G8B8A8_UNORM  – normalised [0,1]
-                return new Vector4(Data[o] / 255f, Data[o + 1] / 255f, Data[o + 2] / 255f, Data[o + 3] / 255f);
-
-            case G1MDataFormat.R16G16B16A16_FLOAT: // R16G16B16A16_FLOAT
-                return new Vector4(ReadHalf(o), ReadHalf(o + 2), ReadHalf(o + 4), ReadHalf(o + 6));
-
-            default: // R32G32B32A32_FLOAT
-                return new Vector4(ReadFloat(o), ReadFloat(o + 4), ReadFloat(o + 8), ReadFloat(o + 12));
-        }
-    }
-
-    private float ReadFloat(int o)
-        => (o + 4 <= Data.Length) ? BitConverter.ToSingle(Data, o) : 0f;
-
-    private float ReadHalf(int o)
-    {
-        if (o + 2 > Data.Length)
-            return 0f;
-        ushort h = BitConverter.ToUInt16(Data, o);
-        int s = (h >> 15) & 0x01;
-        int e = (h >> 10) & 0x1F;
-        int m = h & 0x3FF;
-        float sign = (s == 1) ? -1f : 1f;
-        if (e == 0)
-            return sign * (float)(Math.Pow(2, -14) * (m / 1024.0));
-        if (e == 31)
-            return m == 0 ? (sign * float.PositiveInfinity) : float.NaN;
-        return sign * (float)(Math.Pow(2, e - 15) * (1.0 + m / 1024.0));
-    }
-}
-
-// Index Buffer helper
-
-internal class G1MIndexBufferInternal
-{
-    public byte[] Data;
-    public int Step; // bytes per index (2 or 4)
-
-    public G1MIndexBufferInternal(byte[] d, int s) { Data = d; Step = s; }
-
-    public uint[] GetIndices(uint start, uint count)
-    {
-        var res = new uint[count];
-        for (int i = 0; i < (int)count; i++)
-        {
-            int o = ((int)start + i) * Step;
-            if (o + Step > Data.Length) 
-                break;
-            res[i] = (Step == 4)
-                ? BitConverter.ToUInt32(Data, o)
-                : BitConverter.ToUInt16(Data, o);
-        }
-        return res;
-    }
-}
-
-
-// Plain data classes
-
-internal class G1MBoneInternal
-{
-    public string Name;
-    public Vector3 Position;
-    public Vector3 Scale;
-    public Quaternion Rotation;
-    public int ParentIndex;
-}
-
-internal class G1MSubmeshInternal
-{
-    public int ID, VBRef, IBRef, BoneMapIndex, MaterialIndex;
-    public uint VBStart, VertexCount, IBStart, IndexCount, PrimType;
-}
-
-internal class G1MLayoutInternal
-{
-    public List<uint> BufferIndices = new List<uint>();
-    public List<G1MSemanticInternal> Semantics = new List<G1MSemanticInternal>();
-}
-
-internal class G1MSemanticInternal
-{
-    public ushort BufIdx;   // index into layout's BufferIndices list
-    public ushort Offset;   // byte offset within the buffer stride
-    public G1MDataFormat Format;   // data format enum  (see G1MDataFormat)
-    public byte RawType;  // semantic enum     (see G1MSemanticType)
-    public byte Layer;    // semantic index / UV layer etc.
-
-    public G1MSemanticType Type => (G1MSemanticType)RawType;
-    public int Index => Layer;
-}
-
-internal class G1MTextureRef
-{
-    public ushort Index;       // index in G1T
-    public ushort Layer;       // TEXCOORD layer
-    public ushort TextureType; // 0=diffuse, 1=normal, 2=specular...
-}
-
-internal class G1MMaterialInternal
-{
-    public List<G1MTextureRef> Textures = new();
-}
-internal class G1MMeshInternal
-{
-    public ushort ClothID;
-    public uint ExternalID;
-    public List<uint> SubmeshIndices = new(); // indexes в Submeshes[]
-}
-
-internal class G1MMeshGroupInternal
-{
-    public uint LOD;
-    public uint Group;
-    public List<G1MMeshInternal> Meshes = new();
 }

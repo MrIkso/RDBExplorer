@@ -1,5 +1,5 @@
 ﻿namespace RDBExplorer.Core.Formats.G1M;
-internal enum G1MDataFormat : byte
+public enum G1MDataFormat : byte
 {
     R32_FLOAT = 0,
     R32G32_FLOAT = 1,
