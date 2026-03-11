@@ -43,5 +43,8 @@
 | **SwingData** | `.swg` | ✅ | "Swing" physics parameters (hair, cloth, soft body) | `0x53574751`
 | **TexContext** | `.g1t` | ✅ | Texture container | `0x47543147`
 | **TexStageTableBinaryFile** | `.kts` | ✅ | Texture stage configuration | `0x4753544b`
-| **GameDataBase** | `.database` | ❌ | Game database | `0x00220420`
-| **ByteCode** | `.bytecode` | ✅ | Compiled game scripts | `2011-04-29T14:26:48+0900N`
+| **GameDataBase** * | `.database` | ❌ | Game database | `0x00220420`
+| **ByteCode** * | `.bytecode` | ✅ | Compiled game scripts | `2011-04-29T14:26:48+0900N`
+
+
+`*` marked is the name i named. I could not find the official name of the resource type
