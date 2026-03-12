@@ -5,13 +5,13 @@ namespace RDBExplorer.Core.Formats.LayeredFile
 {
     public struct LFMOrderHeader
     {
-        public uint Magic;
-        public uint Version;
-        public uint FileCount;
-        public uint HeaderSize;
-        public uint DataPointer;
-        public uint NameTablePointer;
-        public uint FirstNamePointer;
+        public uint Magic { get; set; }
+        public uint Version { get; set; }
+        public uint FileCount { get; set; }
+        public uint HeaderSize { get; set; }
+        public uint DataPointer { get; set; }
+        public uint NameTablePointer { get; set; }
+        public uint FirstNamePointer { get; set; }
         public int Reserved1 { get; set; }
         public int Reserved2 { get; set; }
         public int SourceNamePointer { get; set; }
@@ -19,13 +19,21 @@ namespace RDBExplorer.Core.Formats.LayeredFile
 
     public struct LFMOrderEntry
     {
-        public uint Reserved;
-        public uint Index;
-        public uint Pointer;
+        public uint Reserved { get; set; }
+        public uint Index { get; set; }
+        public uint Pointer { get; set; }
+    }
+
+    public class LFMOFile
+    {
+        public LFMOrderHeader Header;
+        public List<LFMOrderEntry> OrderEntries = new List<LFMOrderEntry>();
+        public List<string> HashedPathNames = new List<string>();
     }
 
     public class LFMOrderReader
     {
+        public LFMOFile File { get; set; }
         public List<string> HashedPathNames = new List<string>();
 
         public void Read(string filePath)
@@ -34,26 +42,13 @@ namespace RDBExplorer.Core.Formats.LayeredFile
 
             using (var reader = new BinaryReader(fs))
             {
-                var header = new LFMOrderHeader();
-                header.Magic = reader.ReadUInt32();
-                header.Version = reader.ReadUInt32();
-                header.FileCount = reader.ReadUInt32();
-                header.HeaderSize = reader.ReadUInt32();
-                header.DataPointer = reader.ReadUInt32();
-                header.NameTablePointer = reader.ReadUInt32();
-                header.FirstNamePointer = reader.ReadUInt32();
-                header.Reserved1 = reader.ReadInt32();
-                header.Reserved2 = reader.ReadInt32();
-                header.SourceNamePointer = reader.ReadInt32();
+                var header = reader.ReadStruct<LFMOrderHeader>();
 
                 List<LFMOrderEntry> stringOffsets = new List< LFMOrderEntry>();
 
                 for (int i = 0; i < header.FileCount; i++)
                 {
-                    var strOffset = new LFMOrderEntry();
-                    strOffset.Reserved = reader.ReadUInt32();
-                    strOffset.Index = reader.ReadUInt32();
-                    strOffset.Pointer = reader.ReadUInt32();
+                    var strOffset = reader.ReadStruct<LFMOrderEntry>();
                     stringOffsets.Add(strOffset);
                 }
 
@@ -63,6 +58,11 @@ namespace RDBExplorer.Core.Formats.LayeredFile
                     string path = reader.ReadNullTerminatedString(Encoding.ASCII);
                     HashedPathNames.Add(path);
                 }
+
+                File = new LFMOFile();
+                File.Header = header;
+                File.OrderEntries = stringOffsets;
+                File.HashedPathNames = HashedPathNames;
             }
         }
     }

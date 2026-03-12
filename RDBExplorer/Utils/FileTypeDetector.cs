@@ -89,8 +89,11 @@ namespace RDBExplorer.Utils
 
             AddAsciiSignature("G2A_PACK", ".g2apack"), // animation pack
             AddAsciiSignature("TMG_PACK", ".tmgpack"),
-            AddAsciiSignature("TRMD", ".dmrt"),
             AddAsciiSignature("DMPP", ".dmpp"),
+            AddAsciiSignature("DXBC7M", ".cso"),
+            AddAsciiSignature("DXBC", ".pso"),
+            AddAsciiSignature("TRMD", ".trmd"),
+            AddAsciiSignature("ecb", ".ecb"),
         };
 
         public static string DetectExtension(byte[] data)

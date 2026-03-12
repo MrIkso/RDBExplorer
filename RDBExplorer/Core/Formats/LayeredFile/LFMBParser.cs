@@ -46,6 +46,13 @@ namespace RDBExplorer.Core.Formats.LayeredFile
             LFMInfFileParser lFMInfFileParser = new LFMInfFileParser();
             lFMInfFileParser.Read(lfmInfoPath);
 
+            // lnk archive might contains .h files with enums with real names, try extract it
+            string linkInfoHeaderPath = Path.ChangeExtension(filePath, ".h");
+            List<string> namesFromH = new List<string>();
+            if (File.Exists(linkInfoHeaderPath)) {
+                namesFromH =  LinkInfoDataParser.ParseLinkInfo(linkInfoHeaderPath);
+            }
+
             using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
 
             using (var reader = new BinaryReader(fs))
@@ -74,6 +81,7 @@ namespace RDBExplorer.Core.Formats.LayeredFile
 
                 ArchiveManifest manifest = new ArchiveManifest
                 {
+                    Magic = header.Magic,
                     ArchiveName = fileName,
                     AlignSize = (int)header.Align,
                     Files = new List<ArchiveBinFile>()
@@ -94,9 +102,18 @@ namespace RDBExplorer.Core.Formats.LayeredFile
                     {
                         finalData = reader.ReadBytes((int)entry.Size);
                     }
-                    // detect ext by header
-                    string entryName = $"{Path.GetFileNameWithoutExtension(filePath)}_entry_{i}{FileTypeDetector.DetectExtension(finalData)}";
                     string nameFromArchive = lFMOrderReader.HashedPathNames[i];
+                    string entryName = string.Empty;
+                    if (namesFromH.Count > 0)
+                    {
+                        entryName = namesFromH[i];
+                    }
+                    else
+                    {
+                        // detect ext by header
+                        entryName = $"{Path.GetFileNameWithoutExtension(filePath)}_entry_{i}{FileTypeDetector.DetectExtension(finalData)}";
+                    }
+
                     Console.WriteLine($"Unpacking: {nameFromArchive} -> {entryName}");
 
                     manifest.Files.Add(new ArchiveBinFile
@@ -202,7 +219,7 @@ namespace RDBExplorer.Core.Formats.LayeredFile
 
                 // write header
                 writer.BaseStream.Position = 0;
-                writer.Write(Encoding.ASCII.GetBytes("LFMB"));
+                writer.Write(manifest.Magic);
                 writer.Write(0u);
                 writer.Write((long)entries.Count);
                 writer.Write(writer.BaseStream.Length);

@@ -13,6 +13,8 @@ namespace RDBExplorer.Core.Models
 
     public class ArchiveManifest
     {
+        [JsonPropertyName("archive_magic")]
+        public uint Magic { get; set; }
         [JsonPropertyName("archive_name")]
         public string ArchiveName { get; set; }
 
