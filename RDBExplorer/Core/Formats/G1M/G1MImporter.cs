@@ -51,7 +51,7 @@ namespace RDBExplorer.Core.Formats.G1M
             {
                 Log($"  Layout[{i}] bufRefs=[{string.Join(",", _data.Layouts[i].BufferIndices)}]  semantics={_data.Layouts[i].Semantics.Count}");
                 foreach (var s in _data.Layouts[i].Semantics)
-                    Log($"    sem type={s.Type}({s.RawType}) layer={s.Layer} fmt={s.Format} bufIdx={s.BufIdx} offset={s.Offset}");
+                    Log($"    sem type={s.Type} layer={s.Layer} fmt={s.Format} bufIdx={s.BufIdx} offset={s.Offset}");
             }
 
             for (int i = 0; i < _data.Submeshes.Count; i++)
@@ -70,6 +70,7 @@ namespace RDBExplorer.Core.Formats.G1M
             {
                 model.Skeleton = new GenericSkeleton();
                 foreach (var b in _data.Skeleton)
+                {
                     model.Skeleton.Bones.Add(new GenericBone
                     {
                         Name = b.Name,
@@ -78,6 +79,7 @@ namespace RDBExplorer.Core.Formats.G1M
                         Rotation = b.Rotation,
                         Scale = b.Scale
                     });
+                }
             }
 
             ComputeBoneWorldTransforms();
@@ -103,16 +105,15 @@ namespace RDBExplorer.Core.Formats.G1M
 
             foreach (var group in _data.MeshGroups)
             {
+                foreach (var m in group.Meshes)
                 {
-                    foreach (var m in group.Meshes)
+                    foreach (var subIdx in m.SubmeshIndices)
                     {
-                        foreach (var subIdx in m.SubmeshIndices)
-                        {
-                            submeshClothId[(int)subIdx] = m.ClothID;
-                            submeshExternalId[(int)subIdx] = m.ExternalID;
-                        }
+                        submeshClothId[(int)subIdx] = m.ClothID;
+                        submeshExternalId[(int)subIdx] = m.ExternalID;
                     }
                 }
+
             }
 
             foreach (var sm in _data.Submeshes)

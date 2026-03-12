@@ -1,6 +1,6 @@
 ﻿namespace RDBExplorer.Core.Formats.G1M;
 
-public enum G1MSemanticType
+public enum G1MSemanticType : byte
 {
     POSITION = 0,
     BLENDWEIGHT = 1,

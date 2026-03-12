@@ -1,5 +1,6 @@
 ﻿using OpenTK.Mathematics;
 using RDBExplorer.Utils;
+using System.Text;
 using static System.Collections.Specialized.BitVector32;
 
 namespace RDBExplorer.Core.Formats.G1M
@@ -18,7 +19,15 @@ namespace RDBExplorer.Core.Formats.G1M
         public List<G1MMeshGroupInternal> MeshGroups = new();
         public List<List<uint>> PhysicsPalettes = new List<List<uint>>();
         public List<INunoEntry> NunoEntries = new List<INunoEntry>();
+        public List<G1MGPropertySet> G1MGProperties  = new();
         public ushort[] BoneIDList;
+
+
+        public Vector3 PositionScale { get; private set; } = Vector3.One;
+        public Vector3 PositionBias { get; private set; } = Vector3.Zero;
+        public bool IsQuantized = false;
+
+        public Dictionary<GeometrySectionType, byte[]> ExtendedGeometryData = new();
 
         public void Parse(BinaryReader r)
         {
@@ -203,8 +212,14 @@ namespace RDBExplorer.Core.Formats.G1M
 
                 switch (geometrySection.Type)
                 {
+                    case GeometrySectionType.Section1:
+                        ParseSection1(r, geometrySection.Count);
+                        break;
                     case GeometrySectionType.Materials: 
                         ParseMaterials(r, geometrySection.Count);
+                        break;
+                    case GeometrySectionType.PropertySetPallete:
+                        ParsePropertySetPallete(r, geometrySection.Count);
                         break;
                     case GeometrySectionType.VertexBuffer: 
                         ParseVertexBuffers(r, geometrySection.Count, version);
@@ -228,6 +243,7 @@ namespace RDBExplorer.Core.Formats.G1M
                         ParseSection10(r, geometrySection.Count);
                         break;
                     case GeometrySectionType.PhysicsVertexIndices:
+                        IndexBuffers.Clear();
                         ParseSection11(r, geometrySection.Count);
                         break;
                     case GeometrySectionType.PhysicsConstraints:
@@ -240,7 +256,7 @@ namespace RDBExplorer.Core.Formats.G1M
                         ParseSection14(r, geometrySection.Count);
                         break;
                     case GeometrySectionType.PhysicsBoneMap:
-                        ParseSection15(r, geometrySection.Count);
+                        ParseSection15(r, geometrySection.Count); // flags maybe, same count element as 21
                         break;
                     case GeometrySectionType.WindInfluence:
                         ParseSection16(r, geometrySection.Count);
@@ -249,7 +265,7 @@ namespace RDBExplorer.Core.Formats.G1M
                         ParseSection17(r, geometrySection.Count);
                         break;
                     case GeometrySectionType.SecondaryPhysicsMap:
-                        ParseSection18(r, geometrySection.Count);
+                        ParseSection18(r, geometrySection.Count); // same count element as 22
                         break;
                     case GeometrySectionType.ExtendedPhysics:
                         ParseSection19(r, geometrySection.Count);
@@ -258,10 +274,10 @@ namespace RDBExplorer.Core.Formats.G1M
                         ParseSection20(r, geometrySection.Count);
                         break;
                     case GeometrySectionType.SimpleFlags:
-                        ParseSection21(r, geometrySection.Count);
+                        ParseSection21(r, geometrySection.Count); // flags maybe, same count element as 15
                         break;
                     case GeometrySectionType.DoubleIndices:
-                        ParseSection22(r, geometrySection.Count);
+                        ParseSection22(r, geometrySection.Count);  // same count element as 18
                         break;
 
                     default:
@@ -270,6 +286,18 @@ namespace RDBExplorer.Core.Formats.G1M
                 }
 
                 r.BaseStream.Position = secStart + geometrySection.Size;
+            }
+        }
+
+        private void ParseSection1(BinaryReader r, uint countFromHeader)
+        {
+            //for (int j = 0; j < countFromHeader; j++)
+            {
+                long count = r.ReadInt64();
+                for (int i = 0; i < count; i++)
+                {
+                    byte[] data = r.ReadBytes(64);
+                }
             }
         }
 
@@ -299,6 +327,48 @@ namespace RDBExplorer.Core.Formats.G1M
             }
         }
 
+        private void ParsePropertySetPallete(BinaryReader r, uint count)
+        {
+            for (int i = 0; i < (int)count; i++)
+            {
+                var propertySet = new G1MGPropertySet();
+                uint propsInSet = r.ReadUInt32();
+
+                for (int j = 0; j < (int)propsInSet; j++)
+                {
+                    long propStartPos = r.BaseStream.Position;
+
+                    uint totalSize = r.ReadUInt32();
+                    uint nameLength = r.ReadUInt32();
+                    ushort propType = r.ReadUInt16();
+                    ushort unkFlag1 = r.ReadUInt16();
+                    ushort unkFlag2 = r.ReadUInt16();
+                    ushort unkFlag3 = r.ReadUInt16();
+ 
+                    var prop = new G1MGProperty {
+                        Type = propType,
+                        UnkFlag1 = unkFlag1,
+                        UnkFlag2 = unkFlag2,
+                        UnkFlag3 = unkFlag3,
+                    };
+
+                    if (nameLength > 0)
+                    {
+                        prop.Name = r.ReadEncodedString((int)nameLength);
+                    }
+
+                    int dataSize = (int)(totalSize - 16 - nameLength);
+                    if (dataSize > 0)
+                    {
+                        prop.Data = r.ReadBytes(dataSize);
+                    }
+
+                    propertySet.Properties.Add(prop);
+                }
+
+                G1MGProperties.Add(propertySet);
+            }
+        }
 
         // 0x00010004  –  Vertex Buffers  (segmented)
 
@@ -385,9 +455,8 @@ namespace RDBExplorer.Core.Formats.G1M
                 {
                     ushort bufIdx = r.ReadUInt16(); // which buffer in BufferIndices
                     ushort offset = r.ReadUInt16(); // byte offset within that buffer's stride
-                    G1MDataFormat dataType = (G1MDataFormat)r.ReadByte();   //
-                    r.ReadByte();                      // dummy – ignored
-                    byte semantic = r.ReadByte();   // semantic type enum
+                    EG1MGVADatatype dataType = (EG1MGVADatatype)r.ReadUInt16();   //
+                    G1MSemanticType semantic = (G1MSemanticType)r.ReadByte();   // semantic type enum
                     byte layer = r.ReadByte();   // semantic index / layer
 
                     layout.Semantics.Add(new G1MSemanticInternal
@@ -395,7 +464,7 @@ namespace RDBExplorer.Core.Formats.G1M
                         BufIdx = bufIdx,
                         Offset = offset,
                         Format = dataType,
-                        RawType = semantic,
+                        Type = semantic,
                         Layer = layer
                     });
                 }
@@ -470,7 +539,9 @@ namespace RDBExplorer.Core.Formats.G1M
                 r.ReadUInt32(); // flags
                 int vbIdx = r.ReadInt32();
                 int palIdx = r.ReadInt32();
-                r.ReadUInt32(); r.ReadUInt32(); r.ReadUInt32(); // unks
+                r.ReadUInt32();
+                r.ReadUInt32();
+                r.ReadUInt32(); // unks
                 int matIdx = r.ReadInt32();
                 int ibIdx = r.ReadInt32();
                 r.ReadUInt32(); // unk
@@ -569,32 +640,53 @@ namespace RDBExplorer.Core.Formats.G1M
             public uint Stride { get; set; }
         };
 
+        // might be quanted geometry
         private void ParseSection10(BinaryReader r, uint sectionCount)
         {
             for (int i = 0; i < sectionCount; i++)
             {
                 CommonSubSection section = r.ReadStruct<CommonSubSection>();
-                Console.WriteLine($"Section10, count: {section.Count}, stride: {section.Stride}");
-                List<byte[]> bytes = new List<byte[]>();
+                Console.WriteLine($"Section11, count: {section.Count}, stride: {section.Stride}");
                 for (int j = 0; j < section.Count; j++)
                 {
-                    byte[] data = r.ReadBytes((int)section.Stride);
-                    bytes.Add(data);
+                    r.ReadUInt32(); // unk1
+                    Vector3 unk2 = r.ReadStruct<Vector3>();
+                    Vector3 minBounds = r.ReadStruct<Vector3>();
+                    Vector3 maxBounds = r.ReadStruct<Vector3>();
+                    r.ReadUInt32(); // unk5
+
+                    // Формула для UShort_x4:
+                    // Scale = (Max - Min) / 65535.0
+                    // Bias = Min
+                    this.PositionScale = (maxBounds - minBounds);
+                    this.PositionBias = minBounds;
+
+                    this.IsQuantized = true;
+
+                    Console.WriteLine($"[G1M Quantization] Min={minBounds}, Max={maxBounds}");
+                    Console.WriteLine($"[G1M Quantization] Scale={PositionScale}, Bias={PositionBias}");
                 }
             }
         }
+
         private void ParseSection11(BinaryReader r, uint sectionCount)
         {
             for (int i = 0; i < sectionCount; i++)
             {
                 CommonSubSection section = r.ReadStruct<CommonSubSection>();
+
                 Console.WriteLine($"Section11, count: {section.Count}, stride: {section.Stride}");
+
+                byte[] data = r.ReadBytes((int)((int)section.Stride * section.Count));
+                //VertexBuffers.Add(new G1MVertexBufferInternal(data, (int)section.Stride));
+                IndexBuffers.Add(new G1MIndexBufferInternal(data, (int)section.Stride));
+                /*Console.WriteLine($"Section11, count: {section.Count}, stride: {section.Stride}");
                 List<byte[]> bytes = new List<byte[]>();
                 for (int j = 0; j < section.Count; j++)
                 {
                     byte[] data = r.ReadBytes((int)section.Stride);
                     bytes.Add(data);
-                }
+                }*/
             }
         }
         private void ParseSection12(BinaryReader r, uint sectionCount)
@@ -611,6 +703,9 @@ namespace RDBExplorer.Core.Formats.G1M
                 }
             }
         }
+        
+
+        // moight be geometry
         private void ParseSection13(BinaryReader r, uint sectionCount)
         {
             for (int i = 0; i < sectionCount; i++)
@@ -656,6 +751,7 @@ namespace RDBExplorer.Core.Formats.G1M
             }
         }
 
+        // indexes
         private void ParseSection16(BinaryReader r, uint sectionCount)
         {
             for (int i = 0; i < sectionCount; i++)
@@ -729,6 +825,7 @@ namespace RDBExplorer.Core.Formats.G1M
             public uint Unk2;
         }
 
+        // indexes
         private void ParseSection20(BinaryReader r, uint sectionCount)
         {
             for (int i = 0; i < sectionCount; i++)
