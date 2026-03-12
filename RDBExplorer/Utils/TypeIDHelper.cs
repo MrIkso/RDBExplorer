@@ -128,7 +128,7 @@ namespace RDBExplorer.Utils
                 0x56EFE45C => new("PartsModelGroupBindTableBinaryFile", ".grp"),
                 0xBBF9B49D => new("GroupFile", ".grp"),
                 0x27BC54B7 => new("RigBinFile", ".rigbin"),
-                0x77CABC9 => new ("NavMapDataObject", ".g1nm"),
+                0x77CABC9 => new("NavMapDataObject", ".g1nm"),
 
                 // scripts and coalisions
                 0x5599AA51 => new("KSCLFile", ".kscl"),
@@ -150,15 +150,17 @@ namespace RDBExplorer.Utils
                 0xBEF563DD => new("StreamingMeshletModelData", ".g1m"),
 
                 0x5B2970FC => new("KTF2File", ".ktf2"),
-                0xD7F47FB1 => new("BinaryFile", ".efpl"),
+                0xD7F47FB1 => new("BinaryFile", ".bin"),
                 0x193D2E44 => new("RBFData", ".grbf"),
                 0x4638B72D => new("River2BakedGeometry", ".rbg"),
                 0x5C3E543C => new("SwingData", ".swg"),
                 0x82945A44 => new("LandscapeQuadtree", ".lsqtree"),
                 0xCBFD49B2 => new("MotionMatchingDatabase", ".mmdb"),
                 0x0BD05B27 => new("MITFile", ".mit"),
-                0x6DBD6EA6 => new("CSVFile", ".mit"),
-                0xF02F31AB => new("OIDBindTable", ""),
+                0x6DBD6EA6 => new("CSVFile", ".csv"),
+                0xF02F31AB => new("OIDBindTable"),
+                0x88D74CDA => new("ShadowTreeDataResource", ".dat"),
+                0x115C05AC => new("MotionMatchDatabase", ".mmdb"),
 
                 // database types
                 0xE2715252 => new("Sprite"),
