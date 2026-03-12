@@ -166,7 +166,7 @@ namespace RDBExplorer.Core.Formats.G1T
                             for (int l = 0; l < totalLayers; l++)
                             {
                                 byte[] layerData = texBr.ReadBytes(singleLayerSize * (int)currD);
-                                if ((tex.EX_SwizzleType == EX_SWIZZLE_TYPE.ZLIB_COMPRESSED || G1TFile.Header.Platform == KoeiPlatform.WinDX12)
+                                if ((tex.EX_SwizzleType == EX_SWIZZLE_TYPE.DX12_64kb || tex.EX_SwizzleType == EX_SWIZZLE_TYPE.ZLIB_COMPRESSED)
                                     && layerData.Length > 65536)
                                 {
                                     layerData = DeswizzleD3D12_64KB_BC(layerData, currW, currH, tex.Format);
