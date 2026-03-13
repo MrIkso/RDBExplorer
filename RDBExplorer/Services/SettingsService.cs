@@ -7,6 +7,8 @@ namespace RDBExplorer.Services
         public bool ExportWithNames { get; set; } = false;
         public string LastRdbPath { get; set; } = string.Empty;
         public bool IndentedJson { get; set; } = true;
+
+        public bool UseNewLangParser { get; set; } = false;
     }
 
     public class SettingsService

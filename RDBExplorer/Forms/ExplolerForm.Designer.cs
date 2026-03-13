@@ -40,6 +40,7 @@
             packBinArchiveToolStripMenuItem = new ToolStripMenuItem();
             g1TTexureToolToolStripMenuItem = new ToolStripMenuItem();
             scriptViewerToolStripMenuItem = new ToolStripMenuItem();
+            modelViewerToolStripMenuItem = new ToolStripMenuItem();
             localeToolStripMenuItem = new ToolStripMenuItem();
             unpackLocalesToolStripMenuItem = new ToolStripMenuItem();
             packLocalesToolStripMenuItem = new ToolStripMenuItem();
@@ -53,7 +54,7 @@
             progressBarOperation = new ProgressBar();
             typeFilterComboBox = new RDBExplorer.Controls.CheckedComboBox.CheckedComboBox();
             filterBox = new TextBox();
-            modelViewerToolStripMenuItem = new ToolStripMenuItem();
+            useNewLanguageFileParserToolStripMenuItem = new ToolStripMenuItem();
             menuStrip1.SuspendLayout();
             tableLayoutPanel1.SuspendLayout();
             SuspendLayout();
@@ -147,6 +148,13 @@
             scriptViewerToolStripMenuItem.Text = "Script Viewer";
             scriptViewerToolStripMenuItem.Click += scriptViewerToolStripMenuItem_Click;
             // 
+            // modelViewerToolStripMenuItem
+            // 
+            modelViewerToolStripMenuItem.Name = "modelViewerToolStripMenuItem";
+            modelViewerToolStripMenuItem.Size = new Size(250, 26);
+            modelViewerToolStripMenuItem.Text = "Model Viewer";
+            modelViewerToolStripMenuItem.Click += modelViewerToolStripMenuItem_Click;
+            // 
             // localeToolStripMenuItem
             // 
             localeToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { unpackLocalesToolStripMenuItem, packLocalesToolStripMenuItem });
@@ -170,7 +178,7 @@
             // 
             // settingsToolStripMenuItem
             // 
-            settingsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { exportWitchNameToolStripMenuItem });
+            settingsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { exportWitchNameToolStripMenuItem, useNewLanguageFileParserToolStripMenuItem });
             settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
             settingsToolStripMenuItem.Size = new Size(76, 24);
             settingsToolStripMenuItem.Text = "Settings";
@@ -178,7 +186,7 @@
             // exportWitchNameToolStripMenuItem
             // 
             exportWitchNameToolStripMenuItem.Name = "exportWitchNameToolStripMenuItem";
-            exportWitchNameToolStripMenuItem.Size = new Size(214, 26);
+            exportWitchNameToolStripMenuItem.Size = new Size(289, 26);
             exportWitchNameToolStripMenuItem.Text = "Export With Name";
             exportWitchNameToolStripMenuItem.Click += exportWitchToolStripMenuItem_Click;
             // 
@@ -270,12 +278,12 @@
             filterBox.TabIndex = 7;
             filterBox.TextChanged += toolStripTextBox1_TextChanged;
             // 
-            // modelViewerToolStripMenuItem
+            // useNewLanguageFileParserToolStripMenuItem
             // 
-            modelViewerToolStripMenuItem.Name = "modelViewerToolStripMenuItem";
-            modelViewerToolStripMenuItem.Size = new Size(250, 26);
-            modelViewerToolStripMenuItem.Text = "Model Viewer";
-            modelViewerToolStripMenuItem.Click += modelViewerToolStripMenuItem_Click;
+            useNewLanguageFileParserToolStripMenuItem.Name = "useNewLanguageFileParserToolStripMenuItem";
+            useNewLanguageFileParserToolStripMenuItem.Size = new Size(289, 26);
+            useNewLanguageFileParserToolStripMenuItem.Text = "Use New Language File Parser";
+            useNewLanguageFileParserToolStripMenuItem.Click += useNewLanguageFileParserToolStripMenuItem_Click;
             // 
             // ExplolerForm
             // 
@@ -326,5 +334,6 @@
         private ToolStripMenuItem exportWitchNameToolStripMenuItem;
         private ToolStripMenuItem scriptViewerToolStripMenuItem;
         private ToolStripMenuItem modelViewerToolStripMenuItem;
+        private ToolStripMenuItem useNewLanguageFileParserToolStripMenuItem;
     }
 }

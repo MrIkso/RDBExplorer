@@ -449,7 +449,7 @@ namespace RDBExplorer.Forms
                     }
                 });
 
-               // toolStripStatusLabel.Text = $"Successfully exported to: {targetDir}";
+                // toolStripStatusLabel.Text = $"Successfully exported to: {targetDir}";
                 MessageBox.Show($"Export finished!\nModel and {textureHashes?.Length ?? 0} textures saved to folder.",
                                 "Export Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -751,7 +751,7 @@ namespace RDBExplorer.Forms
                 this.Cursor = Cursors.WaitCursor;
                 await Task.Run(() =>
                 {
-                    BatchLangProcessor.ParseFromDir(selectedDir, selectedDir);
+                    BatchLangProcessor.ParseFromDir(selectedDir, selectedDir, SettingsService.Instance.Config.UseNewLangParser);
                 });
                 MessageBox.Show("Locales unpacked to CSV successfully!", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -779,7 +779,7 @@ namespace RDBExplorer.Forms
                 this.Cursor = Cursors.WaitCursor;
                 await Task.Run(() =>
                 {
-                    BatchLangProcessor.ConvertToBinary(selectedDir, selectedDir);
+                    BatchLangProcessor.ConvertToBinary(selectedDir, selectedDir, SettingsService.Instance.Config.UseNewLangParser);
                 });
                 MessageBox.Show("Locales converted to binary successfully!", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -828,6 +828,7 @@ namespace RDBExplorer.Forms
         {
             SetTitle();
             exportWitchNameToolStripMenuItem.Checked = SettingsService.Instance.Config.ExportWithNames;
+            useNewLanguageFileParserToolStripMenuItem.Checked = SettingsService.Instance.Config.UseNewLangParser;
             toolStripStatusLabel.Text = "Loading Dictionaries..";
             await LoadDictionariesAsync();
             toolStripStatusLabel.Text = "Done!";
@@ -951,14 +952,6 @@ namespace RDBExplorer.Forms
             }
         }
 
-        private void exportWitchToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            bool newState = !exportWitchNameToolStripMenuItem.Checked;
-            exportWitchNameToolStripMenuItem.Checked = newState;
-            SettingsService.Instance.Config.ExportWithNames = newState;
-            SettingsService.Instance.Save();
-        }
-
         private void scriptViewerToolStripMenuItem_Click(object sender, EventArgs e)
         {
             new ScriptViewerForm().Show();
@@ -967,6 +960,24 @@ namespace RDBExplorer.Forms
         private void modelViewerToolStripMenuItem_Click(object sender, EventArgs e)
         {
             new ModelViewForm().Show();
+        }
+
+        private void useNewLanguageFileParserToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ToggleSetting((ToolStripMenuItem)sender, val => SettingsService.Instance.Config.UseNewLangParser = val);
+        }
+
+        private void exportWitchToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ToggleSetting((ToolStripMenuItem)sender, val => SettingsService.Instance.Config.ExportWithNames = val);
+        }
+
+        private void ToggleSetting(ToolStripMenuItem item, Action<bool> updateAction)
+        {
+            bool newState = !item.Checked;
+            item.Checked = newState; 
+            updateAction(newState);
+            SettingsService.Instance.Save();
         }
     }
 }
