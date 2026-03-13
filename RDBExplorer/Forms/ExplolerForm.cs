@@ -22,7 +22,7 @@ namespace RDBExplorer.Forms
         private List<RDBEntry> _filteredDisplayList = new();
         private CancellationTokenSource _filterCts;
         private HashSet<long> _modifiedKtids = new();
-        private string _version = "1.0.2";
+        private string _version = "1.0.3";
 
         public ExplolerForm()
         {
