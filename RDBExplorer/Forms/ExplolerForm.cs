@@ -4,6 +4,7 @@ using RDBExplorer.Core.Formats.LayeredFile;
 using RDBExplorer.Core.Formats.ObjectDatabaseFile;
 using RDBExplorer.Core.Formats.TexInfo;
 using RDBExplorer.Core.Models;
+using RDBExplorer.Models;
 using RDBExplorer.Services;
 using RDBExplorer.Utils;
 using System.Collections.Concurrent;
@@ -201,6 +202,7 @@ namespace RDBExplorer.Forms
                     extractAllToolStripMenuItem.Enabled = true;
                     grabNamesToolStripMenuItem.Enabled = true;
                     grabAllMagicHeadersToolStripMenuItem.Enabled = true;
+                    generateModelDatabaseToolStripMenuItem.Enabled = true;
 
                     PopulateTypeFilter();
                     ShowFiles();
@@ -975,9 +977,66 @@ namespace RDBExplorer.Forms
         private void ToggleSetting(ToolStripMenuItem item, Action<bool> updateAction)
         {
             bool newState = !item.Checked;
-            item.Checked = newState; 
+            item.Checked = newState;
             updateAction(newState);
             SettingsService.Instance.Save();
+        }
+
+        private async void generateModelDatabaseToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_archiveExploler == null)
+            {
+                return;
+            }
+
+            using var sfd = new SaveFileDialog();
+            sfd.Filter = "JSON Files|*.json";
+            sfd.FileName = "model_texture_map.json";
+            string oldStatus = toolStripStatusLabel.Text;
+
+            if (sfd.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    this.Cursor = Cursors.WaitCursor;
+                    archiveList.Enabled = false;
+                    progressBarOperation.Style = ProgressBarStyle.Marquee;
+                    
+                    toolStripStatusLabel.Text = "Initializing...";
+
+                    var generator = new ModelDatabaseGenerator(_archiveExploler);
+
+                    int totalDbs = _archiveExploler.RDBEntries.Count(e => (KTFileType)e.TypeInfoKtid == KTFileType.ObjectDatabaseFile);
+                    progressBarOperation.Maximum = totalDbs;
+
+                    var progress = new Progress<GeneratorProgress>(info =>
+                    {
+                        if (progressBarOperation.Style != ProgressBarStyle.Blocks)
+                        {
+                            progressBarOperation.Style = ProgressBarStyle.Blocks;
+                        }
+
+                        progressBarOperation.Value = info.Current;
+                        toolStripStatusLabel.Text = info.Status;
+                    });
+
+                    await generator.GenerateAndSaveJson(sfd.FileName, progress);
+
+                    MessageBox.Show("Model database successfully generated!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Generation failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    this.Cursor = Cursors.Default;
+                    archiveList.Enabled = true;
+                    progressBarOperation.Style = ProgressBarStyle.Blocks;
+                    progressBarOperation.Value = 0;
+                    toolStripStatusLabel.Text = oldStatus;
+                }
+            }
         }
     }
 }

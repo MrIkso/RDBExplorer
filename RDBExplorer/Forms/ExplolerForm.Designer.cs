@@ -41,11 +41,13 @@
             g1TTexureToolToolStripMenuItem = new ToolStripMenuItem();
             scriptViewerToolStripMenuItem = new ToolStripMenuItem();
             modelViewerToolStripMenuItem = new ToolStripMenuItem();
+            generateModelDatabaseToolStripMenuItem = new ToolStripMenuItem();
             localeToolStripMenuItem = new ToolStripMenuItem();
             unpackLocalesToolStripMenuItem = new ToolStripMenuItem();
             packLocalesToolStripMenuItem = new ToolStripMenuItem();
             settingsToolStripMenuItem = new ToolStripMenuItem();
             exportWitchNameToolStripMenuItem = new ToolStripMenuItem();
+            useNewLanguageFileParserToolStripMenuItem = new ToolStripMenuItem();
             aboutToolStripMenuItem = new ToolStripMenuItem();
             infoToolStripMenuItem = new ToolStripMenuItem();
             tableLayoutPanel1 = new TableLayoutPanel();
@@ -54,7 +56,6 @@
             progressBarOperation = new ProgressBar();
             typeFilterComboBox = new RDBExplorer.Controls.CheckedComboBox.CheckedComboBox();
             filterBox = new TextBox();
-            useNewLanguageFileParserToolStripMenuItem = new ToolStripMenuItem();
             menuStrip1.SuspendLayout();
             tableLayoutPanel1.SuspendLayout();
             SuspendLayout();
@@ -91,7 +92,7 @@
             // 
             // toolsToolStripMenuItem
             // 
-            toolsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { extractAllToolStripMenuItem, grabNamesToolStripMenuItem, grabAllMagicHeadersToolStripMenuItem, upackBinArchiveToolStripMenuItem, packBinArchiveToolStripMenuItem, g1TTexureToolToolStripMenuItem, scriptViewerToolStripMenuItem, modelViewerToolStripMenuItem });
+            toolsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { extractAllToolStripMenuItem, grabNamesToolStripMenuItem, grabAllMagicHeadersToolStripMenuItem, upackBinArchiveToolStripMenuItem, packBinArchiveToolStripMenuItem, g1TTexureToolToolStripMenuItem, scriptViewerToolStripMenuItem, modelViewerToolStripMenuItem, generateModelDatabaseToolStripMenuItem });
             toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             toolsToolStripMenuItem.Size = new Size(58, 24);
             toolsToolStripMenuItem.Text = "Tools";
@@ -100,7 +101,7 @@
             // 
             extractAllToolStripMenuItem.Enabled = false;
             extractAllToolStripMenuItem.Name = "extractAllToolStripMenuItem";
-            extractAllToolStripMenuItem.Size = new Size(250, 26);
+            extractAllToolStripMenuItem.Size = new Size(266, 26);
             extractAllToolStripMenuItem.Text = "Extract All";
             extractAllToolStripMenuItem.Click += extractAllToolStripMenuItem_Click;
             // 
@@ -108,7 +109,7 @@
             // 
             grabNamesToolStripMenuItem.Enabled = false;
             grabNamesToolStripMenuItem.Name = "grabNamesToolStripMenuItem";
-            grabNamesToolStripMenuItem.Size = new Size(250, 26);
+            grabNamesToolStripMenuItem.Size = new Size(266, 26);
             grabNamesToolStripMenuItem.Text = "Grab Names";
             grabNamesToolStripMenuItem.Click += grabNamesToolStripMenuItem_Click;
             // 
@@ -116,44 +117,52 @@
             // 
             grabAllMagicHeadersToolStripMenuItem.Enabled = false;
             grabAllMagicHeadersToolStripMenuItem.Name = "grabAllMagicHeadersToolStripMenuItem";
-            grabAllMagicHeadersToolStripMenuItem.Size = new Size(250, 26);
+            grabAllMagicHeadersToolStripMenuItem.Size = new Size(266, 26);
             grabAllMagicHeadersToolStripMenuItem.Text = "Grab All Magic Headers";
             grabAllMagicHeadersToolStripMenuItem.Click += grabAllMagicHeadersToolStripMenuItem_Click;
             // 
             // upackBinArchiveToolStripMenuItem
             // 
             upackBinArchiveToolStripMenuItem.Name = "upackBinArchiveToolStripMenuItem";
-            upackBinArchiveToolStripMenuItem.Size = new Size(250, 26);
+            upackBinArchiveToolStripMenuItem.Size = new Size(266, 26);
             upackBinArchiveToolStripMenuItem.Text = "Upack Bin Archive";
             upackBinArchiveToolStripMenuItem.Click += upackBinArchiveToolStripMenuItem_Click;
             // 
             // packBinArchiveToolStripMenuItem
             // 
             packBinArchiveToolStripMenuItem.Name = "packBinArchiveToolStripMenuItem";
-            packBinArchiveToolStripMenuItem.Size = new Size(250, 26);
+            packBinArchiveToolStripMenuItem.Size = new Size(266, 26);
             packBinArchiveToolStripMenuItem.Text = "Pack Bin Archive";
             packBinArchiveToolStripMenuItem.Click += packBinArchiveToolStripMenuItem_Click;
             // 
             // g1TTexureToolToolStripMenuItem
             // 
             g1TTexureToolToolStripMenuItem.Name = "g1TTexureToolToolStripMenuItem";
-            g1TTexureToolToolStripMenuItem.Size = new Size(250, 26);
+            g1TTexureToolToolStripMenuItem.Size = new Size(266, 26);
             g1TTexureToolToolStripMenuItem.Text = "G1T Texure Tool";
             g1TTexureToolToolStripMenuItem.Click += g1TTexureToolToolStripMenuItem_Click;
             // 
             // scriptViewerToolStripMenuItem
             // 
             scriptViewerToolStripMenuItem.Name = "scriptViewerToolStripMenuItem";
-            scriptViewerToolStripMenuItem.Size = new Size(250, 26);
+            scriptViewerToolStripMenuItem.Size = new Size(266, 26);
             scriptViewerToolStripMenuItem.Text = "Script Viewer";
             scriptViewerToolStripMenuItem.Click += scriptViewerToolStripMenuItem_Click;
             // 
             // modelViewerToolStripMenuItem
             // 
             modelViewerToolStripMenuItem.Name = "modelViewerToolStripMenuItem";
-            modelViewerToolStripMenuItem.Size = new Size(250, 26);
+            modelViewerToolStripMenuItem.Size = new Size(266, 26);
             modelViewerToolStripMenuItem.Text = "Model Viewer";
             modelViewerToolStripMenuItem.Click += modelViewerToolStripMenuItem_Click;
+            // 
+            // generateModelDatabaseToolStripMenuItem
+            // 
+            generateModelDatabaseToolStripMenuItem.Enabled = false;
+            generateModelDatabaseToolStripMenuItem.Name = "generateModelDatabaseToolStripMenuItem";
+            generateModelDatabaseToolStripMenuItem.Size = new Size(266, 26);
+            generateModelDatabaseToolStripMenuItem.Text = "Generate Model Database";
+            generateModelDatabaseToolStripMenuItem.Click += generateModelDatabaseToolStripMenuItem_Click;
             // 
             // localeToolStripMenuItem
             // 
@@ -189,6 +198,13 @@
             exportWitchNameToolStripMenuItem.Size = new Size(289, 26);
             exportWitchNameToolStripMenuItem.Text = "Export With Name";
             exportWitchNameToolStripMenuItem.Click += exportWitchToolStripMenuItem_Click;
+            // 
+            // useNewLanguageFileParserToolStripMenuItem
+            // 
+            useNewLanguageFileParserToolStripMenuItem.Name = "useNewLanguageFileParserToolStripMenuItem";
+            useNewLanguageFileParserToolStripMenuItem.Size = new Size(289, 26);
+            useNewLanguageFileParserToolStripMenuItem.Text = "Use New Language File Parser";
+            useNewLanguageFileParserToolStripMenuItem.Click += useNewLanguageFileParserToolStripMenuItem_Click;
             // 
             // aboutToolStripMenuItem
             // 
@@ -278,13 +294,6 @@
             filterBox.TabIndex = 7;
             filterBox.TextChanged += toolStripTextBox1_TextChanged;
             // 
-            // useNewLanguageFileParserToolStripMenuItem
-            // 
-            useNewLanguageFileParserToolStripMenuItem.Name = "useNewLanguageFileParserToolStripMenuItem";
-            useNewLanguageFileParserToolStripMenuItem.Size = new Size(289, 26);
-            useNewLanguageFileParserToolStripMenuItem.Text = "Use New Language File Parser";
-            useNewLanguageFileParserToolStripMenuItem.Click += useNewLanguageFileParserToolStripMenuItem_Click;
-            // 
             // ExplolerForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
@@ -335,5 +344,6 @@
         private ToolStripMenuItem scriptViewerToolStripMenuItem;
         private ToolStripMenuItem modelViewerToolStripMenuItem;
         private ToolStripMenuItem useNewLanguageFileParserToolStripMenuItem;
+        private ToolStripMenuItem generateModelDatabaseToolStripMenuItem;
     }
 }
