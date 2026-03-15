@@ -23,6 +23,7 @@ namespace RDBExplorer.Utils
             if (!File.Exists(path))
                 return;
 
+            _knownNames.Clear();
             var newNames = new Dictionary<uint, string>();
 
             using (var reader = new StreamReader(path, Encoding.UTF8))

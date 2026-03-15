@@ -22,7 +22,7 @@ namespace RDBExplorer.Services
             }
         }
 
-        public Dictionary<uint, uint[]> ModelToTextures { get; private set; }
+        public Dictionary<uint, uint[]> ModelToTextures { get; private set; } = new Dictionary<uint, uint[]>();
 
         private TextureMapService(string path)
         {
@@ -33,6 +33,7 @@ namespace RDBExplorer.Services
             {
                 var rootData = JsonSerializer.Deserialize<G1M2G1TModel>(fs);
 
+                ModelToTextures.Clear();
                 if (rootData?.Mappings != null)
                 {
                     ModelToTextures = rootData.Mappings.ToDictionary(

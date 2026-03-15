@@ -9,6 +9,9 @@ namespace RDBExplorer.Services
         public bool IndentedJson { get; set; } = true;
 
         public bool UseNewLangParser { get; set; } = false;
+
+        public string RDBNamesDatabasePath { get; set; }
+        public string ModelsAndTextutesDatabasePath { get; set; }
     }
 
     public class SettingsService
@@ -37,15 +40,31 @@ namespace RDBExplorer.Services
                 {
                     string json = File.ReadAllText(SettingsFile);
                     Config = JsonSerializer.Deserialize<UserSettings>(json) ?? new UserSettings();
+                    ValidatePaths();
                 }
                 else
                 {
                     Config = new UserSettings();
+                    ValidatePaths();
+                    Save();
                 }
             }
             catch
             {
                 Config = new UserSettings();
+            }
+        }
+
+        private void ValidatePaths()
+        {
+            if (string.IsNullOrWhiteSpace(Config.RDBNamesDatabasePath))
+            {
+                Config.RDBNamesDatabasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory + "/Databases", "rdb_names.csv");
+            }
+
+            if (string.IsNullOrWhiteSpace(Config.ModelsAndTextutesDatabasePath))
+            {
+                Config.ModelsAndTextutesDatabasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory + "/Databases", "all_g1m2glt_agg.json");
             }
         }
 

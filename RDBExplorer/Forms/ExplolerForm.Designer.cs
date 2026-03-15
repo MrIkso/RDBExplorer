@@ -56,6 +56,7 @@
             progressBarOperation = new ProgressBar();
             typeFilterComboBox = new RDBExplorer.Controls.CheckedComboBox.CheckedComboBox();
             filterBox = new TextBox();
+            preferencesToolStripMenuItem = new ToolStripMenuItem();
             menuStrip1.SuspendLayout();
             tableLayoutPanel1.SuspendLayout();
             SuspendLayout();
@@ -187,7 +188,7 @@
             // 
             // settingsToolStripMenuItem
             // 
-            settingsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { exportWitchNameToolStripMenuItem, useNewLanguageFileParserToolStripMenuItem });
+            settingsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { exportWitchNameToolStripMenuItem, useNewLanguageFileParserToolStripMenuItem, preferencesToolStripMenuItem });
             settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
             settingsToolStripMenuItem.Size = new Size(76, 24);
             settingsToolStripMenuItem.Text = "Settings";
@@ -294,6 +295,13 @@
             filterBox.TabIndex = 7;
             filterBox.TextChanged += toolStripTextBox1_TextChanged;
             // 
+            // preferencesToolStripMenuItem
+            // 
+            preferencesToolStripMenuItem.Name = "preferencesToolStripMenuItem";
+            preferencesToolStripMenuItem.Size = new Size(289, 26);
+            preferencesToolStripMenuItem.Text = "Preferences";
+            preferencesToolStripMenuItem.Click += preferencesToolStripMenuItem_Click;
+            // 
             // ExplolerForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
@@ -345,5 +353,6 @@
         private ToolStripMenuItem modelViewerToolStripMenuItem;
         private ToolStripMenuItem useNewLanguageFileParserToolStripMenuItem;
         private ToolStripMenuItem generateModelDatabaseToolStripMenuItem;
+        private ToolStripMenuItem preferencesToolStripMenuItem;
     }
 }

@@ -838,12 +838,13 @@ namespace RDBExplorer.Forms
 
         private async Task LoadDictionariesAsync()
         {
+            var config = SettingsService.Instance.Config;
             await Task.Run(() =>
             {
-                TypeIDHelper.Instance.LoadNamesFromCsv("rdb_names.csv");
-                KidsObjNameTypeIDHelper.Instance.Load("kidstypeinfodb.yml");
-                KidsObjNameTypeIDHelper.Instance.LoadProperties("all_properties.csv");
-                TextureMapService.Initialize("all_g1m2glt_agg.json");
+                TypeIDHelper.Instance.LoadNamesFromCsv(config.RDBNamesDatabasePath);
+                KidsObjNameTypeIDHelper.Instance.Load(Path.Combine(AppDomain.CurrentDomain.BaseDirectory + "/Databases", "kidstypeinfodb.yml"));
+                KidsObjNameTypeIDHelper.Instance.LoadProperties(Path.Combine(AppDomain.CurrentDomain.BaseDirectory + "/Databases", "all_properties.csv"));
+                TextureMapService.Initialize(config.ModelsAndTextutesDatabasePath);
             });
         }
 
@@ -1001,7 +1002,7 @@ namespace RDBExplorer.Forms
                     this.Cursor = Cursors.WaitCursor;
                     archiveList.Enabled = false;
                     progressBarOperation.Style = ProgressBarStyle.Marquee;
-                    
+
                     toolStripStatusLabel.Text = "Initializing...";
 
                     var generator = new ModelDatabaseGenerator(_archiveExploler);
@@ -1037,6 +1038,20 @@ namespace RDBExplorer.Forms
                     toolStripStatusLabel.Text = oldStatus;
                 }
             }
+        }
+
+        private void preferencesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DialogResult result = new SettingsForm().ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                if (MessageBox.Show("Settings saved. Reload dictionaries now?", "Reload",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                {
+                    _ = LoadDictionariesAsync();
+                }
+            }
+
         }
     }
 }
