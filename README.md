@@ -65,8 +65,8 @@ Special thanks to the developers of any third-party libraries and information us
 - [Hex.Box](https://github.com/harborsiem/Be.HexEditor) fork
 - [FastColoredTextBox](https://github.com/vurdalakov/FastColoredTextBox.NET10) fork
 - [Project-G1M](https://github.com/Joschuka/Project-G1M) @Joschuka for G1M file research
-- [fdata_dump](https://github.com/DeathChaos25/fdata_dump) - .yml object names for kidsobject database
-- [Cethleann](https://github.com/neptuwunium/Cethleann) for kidsobject database structure and some other structures which provided the impetus for writing an improved .bin/.fdata unpacker
+- [fdata_dump](https://github.com/DeathChaos25/fdata_dump) .yml object names for kidsobject database
+- [Cethleann](https://github.com/neptuwunium/Cethleann) for kidsobject database structure and some other structures which provided for writing an improved .bin/.fdata unpacker
 - etc.
 
 Icons used from Visual Studio Image Library 2022
