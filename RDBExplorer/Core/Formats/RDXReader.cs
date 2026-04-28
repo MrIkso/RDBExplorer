@@ -21,7 +21,8 @@ namespace RDBExplorer.Core.Formats
                     entries.Add(new RdxEntry
                     {
                         Index = reader.ReadUInt16(),
-                        Marker = reader.ReadUInt16(),
+                        SubdirIndex = reader.ReadByte(),
+                        LocaleIndex = reader.ReadByte(),
                         FileId = reader.ReadUInt32()
                     });
                 }
