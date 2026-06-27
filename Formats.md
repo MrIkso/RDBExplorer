@@ -3,7 +3,7 @@
 | Resource Type | Extension | Parser | Description | Magic |
 | :--- | :--- | :---: | :--- |  :--- |
 | **AssetData** | `.srsa` | ❌ | Audio data (sound effects, sound banks) | `0x41535253`
-| **BinaryFile** | `.efpl` | ❌ | Binary data, misc files |
+| **BinaryFile** | `.bin` | ❌ | Binary data, misc files |
 | **CSVFile** | `.mit` | ❌  | |
 | **EffectData** | `.g1e` | ❌ | Visual effect parameters (particles, emitters, timings) | `0x58463147`
 | **EffectMeshData** | `.g1em` | ❌ | Geometry (meshes) used for special effects | `0x4d453147`
@@ -24,7 +24,7 @@
 | **KTIDFileBinary** | `.ktid` | ✅ | Resource ID registry (linkage between hashes and files) |
 | **LandscapeQuadtree** | `.lsqtree` | ✅ | Spatial hierarchy for landscape optimization |
 | **MaterialGroupBindTableBinaryFile** | `.mtl` | ✅ | Material list and texture-to-shader register bindings |
-| **ModelData** | `.g1m` | ❌ | Main 3D model | `0x5f4d3147`
+| **ModelData** | `.g1m` | ✅ | Main 3D model | `0x5f4d3147`
 | **MotionMatchingDatabase** | `.mmdb` | ❌ | Procedural animation database | `0x6d6d6462`
 | **ObjectDatabaseFile** | `.kidsobjdb` | ✅ | Main object property database | `0x5f444f4b`
 | **OBOROStaticResourceBinaryFile** | `.oboro` | ✅ | Static environment data|
@@ -43,7 +43,6 @@
 | **SwingData** | `.swg` | ✅ | "Swing" physics parameters (hair, cloth, soft body) | `0x53574751`
 | **TexContext** | `.g1t` | ✅ | Texture container | `0x47543147`
 | **TexStageTableBinaryFile** | `.kts` | ✅ | Texture stage configuration | `0x4753544b`
-| **GameDataBase** * | `.database` | ❌ | Game database | `0x00220420`
 | **ByteCode** * | `.bytecode` | ✅ | Compiled game scripts | `2011-04-29T14:26:48+0900N`
 
 
