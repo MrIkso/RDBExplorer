@@ -59,12 +59,14 @@ namespace RDBExplorer.Services
         {
             if (string.IsNullOrWhiteSpace(Config.RDBNamesDatabasePath))
             {
-                Config.RDBNamesDatabasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory + "/Databases", "rdb_names.csv");
+                string rawPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Databases", "rdb_names.csv");
+                Config.RDBNamesDatabasePath = Path.GetFullPath(rawPath);
             }
 
             if (string.IsNullOrWhiteSpace(Config.ModelsAndTextutesDatabasePath))
             {
-                Config.ModelsAndTextutesDatabasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory + "/Databases", "all_g1m2glt_agg.json");
+                string rawPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Databases", "all_g1m2glt_agg.json");
+                Config.ModelsAndTextutesDatabasePath = Path.GetFullPath(rawPath);
             }
         }
 
